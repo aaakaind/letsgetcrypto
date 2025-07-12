@@ -28,3 +28,33 @@ Stack trace:
 2025-07-12 03:34:53.521 | WARNING  | main:create_bitcoin_wallet:633 - bitcoinlib not available, simulating Bitcoin wallet
 2025-07-12 03:34:53.521 | WARNING  | main:create_ethereum_wallet:679 - web3 not available, simulating Ethereum wallet
 2025-07-12 03:34:53.521 | INFO     | main:_simulate_trade:947 - Simulated trade: BUY 0.01 BTC/USDT at 36467.43124231041
+2025-07-12 03:37:19.008 | INFO     | main:add_technical_indicators:280 - Calculating technical indicators
+2025-07-12 03:37:19.015 | ERROR    | main:add_technical_indicators:332 - Error calculating technical indicators: module 'ta.volume' has no attribute 'volume_sma'
+2025-07-12 03:37:19.016 | INFO     | main:prepare_features:354 - Preparing ML features
+2025-07-12 03:37:19.019 | SUCCESS  | main:prepare_features:377 - Prepared 744 samples with 14 features
+2025-07-12 03:37:19.020 | INFO     | main:train_logistic_regression:396 - Training Logistic Regression model
+2025-07-12 03:37:19.028 | SUCCESS  | main:train_logistic_regression:418 - Logistic Regression accuracy: 0.5302
+2025-07-12 03:37:19.028 | INFO     | main:train_xgboost:437 - Training XGBoost model
+2025-07-12 03:37:19.029 | INFO     | main:train_xgboost:453 - Using GPU acceleration for XGBoost
+2025-07-12 03:37:19.039 | ERROR    | main:train_xgboost:478 - Error training XGBoost: [03:37:19] /workspace/src/tree/updater_gpu_hist.cu:847: Check failed: ctx_->Ordinal() >= 0 (-1 vs. 0) : Must have at least one device
+Stack trace:
+  [bt] (0) /home/runner/.local/lib/python3.12/site-packages/xgboost/lib/libxgboost.so(+0x2a6ecc) [0x7fbe2b2a6ecc]
+  [bt] (1) /home/runner/.local/lib/python3.12/site-packages/xgboost/lib/libxgboost.so(+0xfd7c14) [0x7fbe2bfd7c14]
+  [bt] (2) /home/runner/.local/lib/python3.12/site-packages/xgboost/lib/libxgboost.so(+0xfdf966) [0x7fbe2bfdf966]
+  [bt] (3) /home/runner/.local/lib/python3.12/site-packages/xgboost/lib/libxgboost.so(+0x63b602) [0x7fbe2b63b602]
+  [bt] (4) /home/runner/.local/lib/python3.12/site-packages/xgboost/lib/libxgboost.so(+0x63ca5d) [0x7fbe2b63ca5d]
+  [bt] (5) /home/runner/.local/lib/python3.12/site-packages/xgboost/lib/libxgboost.so(+0x68d38e) [0x7fbe2b68d38e]
+  [bt] (6) /home/runner/.local/lib/python3.12/site-packages/xgboost/lib/libxgboost.so(XGBoosterUpdateOneIter+0x77) [0x7fbe2b1b6fa7]
+  [bt] (7) /lib/x86_64-linux-gnu/libffi.so.8(+0x7b16) [0x7fbe6cbfbb16]
+  [bt] (8) /lib/x86_64-linux-gnu/libffi.so.8(+0x43ef) [0x7fbe6cbf83ef]
+
+
+2025-07-12 03:37:19.041 | WARNING  | main:create_bitcoin_wallet:633 - bitcoinlib not available, simulating Bitcoin wallet
+2025-07-12 03:37:19.041 | WARNING  | main:create_ethereum_wallet:679 - web3 not available, simulating Ethereum wallet
+2025-07-12 03:37:19.041 | INFO     | main:_simulate_trade:947 - Simulated trade: SELL 0.001 BTC/USDT at 32113.29368523488
+2025-07-12 03:37:19.042 | INFO     | main:fetch_fear_greed_index:178 - Fetching Fear & Greed Index
+2025-07-12 03:37:19.103 | ERROR    | main:fetch_fear_greed_index:198 - Error fetching Fear & Greed Index: HTTPSConnectionPool(host='api.alternative.me', port=443): Max retries exceeded with url: /fng/ (Caused by NameResolutionError("<urllib3.connection.HTTPSConnection object at 0x7fbe41bef590>: Failed to resolve 'api.alternative.me' ([Errno -3] Temporary failure in name resolution)"))
+2025-07-12 03:37:19.103 | INFO     | main:fetch_news_sentiment:212 - Simulating news sentiment for bitcoin
+2025-07-12 03:37:19.103 | INFO     | main:fetch_news_sentiment:228 - News sentiment: {'positive': 0.3338208325108831, 'negative': 0.21386038748416153, 'neutral': 0.45231878000495535}
+2025-07-12 03:37:19.103 | INFO     | main:fetch_social_sentiment:246 - Simulating social sentiment for BTC
+2025-07-12 03:37:19.103 | INFO     | main:fetch_social_sentiment:258 - Social sentiment: {'bullish': np.float64(0.5688469749219629), 'bearish': np.float64(0.2376091694785798), 'volume': 353}
