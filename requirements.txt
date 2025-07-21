@@ -5,6 +5,11 @@ numpy>=1.24.0
 matplotlib>=3.7.0
 seaborn>=0.12.0
 
+# Django dependencies
+Django>=4.2.0
+gunicorn>=21.2.0
+psycopg2-binary>=2.9.0
+
 # API libraries
 ccxt>=4.1.0
 python-binance>=1.0.17

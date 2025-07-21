@@ -46,6 +46,9 @@ crypto_trading.log
 *.sqlite
 *.sqlite3
 
+# Django static files
+staticfiles/
+
 # Trading data
 trading_history.json
 model_weights/
