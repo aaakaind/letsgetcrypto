@@ -48,6 +48,7 @@ crypto_trading.log
 
 # Django static files
 staticfiles/
+media/
 
 # Trading data
 trading_history.json
@@ -96,3 +97,12 @@ htmlcov/
 
 # Node modules (if any)
 node_modules/
+
+# Docker
+.dockerignore
+
+# AWS deployment files (generated)
+aws/ecs-task-definition-updated.json
+
+# Docker Compose volumes
+postgres_data/

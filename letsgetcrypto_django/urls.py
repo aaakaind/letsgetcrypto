@@ -15,8 +15,26 @@ Including another URLconf
     2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
 """
 from django.contrib import admin
-from django.urls import path
+from django.urls import path, include
+from django.http import JsonResponse
+
+def root_view(request):
+    """Root endpoint with API information"""
+    return JsonResponse({
+        'message': 'LetsGetCrypto API',
+        'version': '1.0.0',
+        'endpoints': {
+            'health': '/api/health/',
+            'market_overview': '/api/market/',
+            'crypto_price': '/api/price/{symbol}/',
+            'crypto_history': '/api/history/{symbol}/',
+            'admin': '/admin/'
+        },
+        'documentation': 'https://github.com/aaakaind/letsgetcrypto'
+    })
 
 urlpatterns = [
+    path('', root_view, name='root'),
     path('admin/', admin.site.urls),
+    path('api/', include('crypto_api.urls')),
 ]

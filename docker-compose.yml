@@ -1,0 +1,57 @@
+version: '3.8'
+
+services:
+  postgres:
+    image: postgres:14
+    environment:
+      POSTGRES_DB: letsgetcrypto
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: testpassword123
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  app:
+    build: .
+    environment:
+      - DJANGO_DEBUG=False
+      - DJANGO_SECRET_KEY=test-secret-key-for-local-development-only
+      - DJANGO_ALLOWED_HOSTS=*
+      - DATABASE_URL=postgres://postgres:testpassword123@postgres:5432/letsgetcrypto
+      - DJANGO_LOG_LEVEL=INFO
+    ports:
+      - "8000:8000"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:8000/api/health/ || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+    command: >
+      sh -c "
+        python manage.py migrate &&
+        python manage.py collectstatic --noinput &&
+        gunicorn --bind 0.0.0.0:8000 letsgetcrypto_django.wsgi:application
+      "
+
+  nginx:
+    image: nginx:alpine
+    ports:
+      - "80:80"
+    volumes:
+      - ./nginx.conf:/etc/nginx/nginx.conf:ro
+    depends_on:
+      app:
+        condition: service_healthy
+
+volumes:
+  postgres_data:
