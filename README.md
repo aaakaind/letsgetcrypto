@@ -11,6 +11,7 @@
 - **⚡ Automated Trading**: Risk-managed trading with stop-loss and take-profit
 - **🖥️ Professional GUI**: PyQt5 interface with real-time charts and controls
 - **🛡️ Risk Management**: Position sizing, daily limits, comprehensive error handling
+- **🔌 MCP Server**: Model Context Protocol server for AI assistant integration
 - **🤝 MCP Server**: AI assistant integration via Model Context Protocol
 - **☁️ AWS Deployment**: Production-ready deployment to AWS with ECS and RDS
 
@@ -52,6 +53,8 @@ python main.py
 ## 📚 Documentation
 
 - **[Complete User Guide](README_APP.md)**: Detailed features and usage
+- **[MCP Server Guide](README_MCP.md)**: AI assistant integration with Model Context Protocol
+- **[Integration Guide](INTEGRATION_GUIDE.md)**: Step-by-step setup for MCP clients
 - **[AWS Deployment Guide](AWS_DEPLOYMENT.md)**: Production deployment to AWS
 - **[MCP Server Guide](MCP_SERVER.md)**: AI assistant integration via Model Context Protocol
 - **[Installation Guide](requirements.txt)**: All dependencies
@@ -73,7 +76,25 @@ python -c "from main import *; print('✓ All imports successful')"
 
 # Run validation tests
 python -c "exec(open('main.py').read().split('if __name__')[0]); print('✓ Tests passed')"
+
+# Test MCP server
+python3 crypto_mcp_server.py  # Run the MCP server
+python3 test_mcp_server.py    # Test the MCP server
 ```
+
+## 🔌 MCP Server Integration
+
+The project includes a Model Context Protocol (MCP) server that exposes cryptocurrency data to AI assistants:
+
+```bash
+# Run the MCP server
+python3 crypto_mcp_server.py
+
+# Test the server
+python3 test_mcp_server.py
+```
+
+For detailed MCP integration instructions, see [README_MCP.md](README_MCP.md).
 
 ## 📄 License
 
