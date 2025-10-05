@@ -1,0 +1,33 @@
+{
+  "mcpServers": {
+    "letsgetcrypto": {
+      "command": "python",
+      "args": [
+        "mcp_server.py"
+      ],
+      "env": {
+        "CRYPTO_API_URL": "http://localhost:8000"
+      },
+      "description": "LetsGetCrypto MCP Server - Provides cryptocurrency market data and trading tools",
+      "version": "1.0.0",
+      "tools": [
+        {
+          "name": "get_crypto_price",
+          "description": "Get current price and market data for a cryptocurrency"
+        },
+        {
+          "name": "get_crypto_history",
+          "description": "Get historical price data for a cryptocurrency"
+        },
+        {
+          "name": "get_market_overview",
+          "description": "Get market overview with top cryptocurrencies by market cap"
+        },
+        {
+          "name": "check_api_health",
+          "description": "Check the health status of the cryptocurrency API"
+        }
+      ]
+    }
+  }
+}

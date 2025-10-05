@@ -11,6 +11,8 @@
 - **⚡ Automated Trading**: Risk-managed trading with stop-loss and take-profit
 - **🖥️ Professional GUI**: PyQt5 interface with real-time charts and controls
 - **🛡️ Risk Management**: Position sizing, daily limits, comprehensive error handling
+- **🤝 MCP Server**: AI assistant integration via Model Context Protocol
+- **☁️ AWS Deployment**: Production-ready deployment to AWS with ECS and RDS
 
 ## 🚀 Quick Start
 
@@ -50,6 +52,8 @@ python main.py
 ## 📚 Documentation
 
 - **[Complete User Guide](README_APP.md)**: Detailed features and usage
+- **[AWS Deployment Guide](AWS_DEPLOYMENT.md)**: Production deployment to AWS
+- **[MCP Server Guide](MCP_SERVER.md)**: AI assistant integration via Model Context Protocol
 - **[Installation Guide](requirements.txt)**: All dependencies
 - **[Risk Disclosure](README_APP.md#important-disclaimers)**: Trading risks and limitations
 
