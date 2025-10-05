@@ -56,6 +56,7 @@ python main.py
 ## 📚 Documentation
 
 - **[Complete User Guide](README_APP.md)**: Detailed features and usage
+- **[Claude AI Setup Guide](CLAUDE_SETUP.md)**: Configure AI-powered insights
 - **[Installation Guide](requirements.txt)**: All dependencies
 - **[Risk Disclosure](README_APP.md#important-disclaimers)**: Trading risks and limitations
 
