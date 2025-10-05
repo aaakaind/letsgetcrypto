@@ -41,6 +41,15 @@ except ImportError:
     TA_AVAILABLE = False
     print("⚠️ Technical analysis library not available.")
 
+# Claude integration
+try:
+    from claude_analyzer import ClaudeAnalyzer
+    CLAUDE_AVAILABLE = True
+except ImportError:
+    ClaudeAnalyzer = None
+    CLAUDE_AVAILABLE = False
+    print("⚠️ Claude Analyzer not available. AI insights disabled.")
+
 # Configure logging
 logging.basicConfig(
     level=logging.INFO,
@@ -55,13 +64,22 @@ class HeadlessCryptoAPI:
     Provides API-like interface for AWS deployment
     """
     
-    def __init__(self):
+    def __init__(self, enable_claude: bool = True):
         self.data_cache = {}
         self.cache_timeout = 300  # 5 minutes
         self.supported_coins = [
             'bitcoin', 'ethereum', 'binancecoin', 'cardano', 'solana',
             'polkadot', 'dogecoin', 'avalanche-2', 'polygon', 'chainlink'
         ]
+        
+        # Initialize Claude analyzer if available and enabled
+        self.claude_analyzer = None
+        if enable_claude and CLAUDE_AVAILABLE:
+            self.claude_analyzer = ClaudeAnalyzer()
+            if self.claude_analyzer.is_available():
+                logger.info("Claude Opus 4.1 integration enabled")
+            else:
+                logger.warning("Claude API key not configured. AI insights disabled.")
         
     def fetch_price_data(self, coin_id: str, days: int = 30) -> Optional[pd.DataFrame]:
         """
@@ -271,7 +289,7 @@ class HeadlessCryptoAPI:
             logger.error(f"Error fetching market overview: {e}")
             return []
     
-    def analyze_cryptocurrency(self, coin_id: str, days: int = 30) -> Dict[str, Any]:
+    def analyze_cryptocurrency(self, coin_id: str, days: int = 30, use_claude: bool = True) -> Dict[str, Any]:
         """
         Perform complete analysis of a cryptocurrency
         """
@@ -294,7 +312,7 @@ class HeadlessCryptoAPI:
         
         volatility_7d = df['price_change'].tail(7).std() * np.sqrt(7) * 100
         
-        return {
+        result = {
             'coin_id': coin_id,
             'analysis_timestamp': datetime.now().isoformat(),
             'price_data': {
@@ -307,6 +325,47 @@ class HeadlessCryptoAPI:
             'market_trend': self._determine_trend(df),
             'recommendation': self._get_recommendation(signals)
         }
+        
+        # Add Claude AI analysis if available and requested
+        if use_claude and self.claude_analyzer and self.claude_analyzer.is_available():
+            try:
+                logger.info("Generating Claude AI analysis...")
+                
+                # Prepare technical indicators for Claude
+                latest_data = df.iloc[-1]
+                tech_indicators = {
+                    'rsi': latest_data.get('rsi', None),
+                    'macd': latest_data.get('macd', None),
+                    'sma_7': latest_data.get('sma_7', None),
+                    'sma_25': latest_data.get('sma_25', None),
+                    'volatility': latest_data.get('volatility', None),
+                    'volume': latest_data.get('volume', None)
+                }
+                
+                ml_predictions = {
+                    'signal': signals.get('signal', 'HOLD'),
+                    'confidence': signals.get('confidence', 0.5)
+                }
+                
+                claude_analysis = self.claude_analyzer.analyze_market_data(
+                    coin_name=coin_id.replace('-', ' ').title(),
+                    current_price=latest_price,
+                    price_change_24h=price_change_24h,
+                    technical_indicators=tech_indicators,
+                    ml_predictions=ml_predictions,
+                    fear_greed_index=None
+                )
+                
+                result['claude_analysis'] = claude_analysis
+                logger.success("Claude AI analysis added successfully")
+                
+            except Exception as e:
+                logger.error(f"Error generating Claude analysis: {e}")
+                result['claude_analysis'] = {
+                    'error': f'Claude analysis failed: {str(e)}'
+                }
+        
+        return result
     
     def _determine_trend(self, df: pd.DataFrame) -> str:
         """Determine market trend"""

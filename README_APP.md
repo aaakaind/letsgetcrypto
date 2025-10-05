@@ -12,6 +12,7 @@ This is a comprehensive cryptocurrency trading and prediction tool that combines
 - **Fear & Greed Index**: Market sentiment indicator
 - **News Sentiment**: Simulated cryptocurrency news analysis
 - **Social Sentiment**: Simulated social media sentiment tracking
+- **Claude Opus 4.1 AI**: Advanced market analysis and intelligent insights
 
 ### 📊 Technical Analysis
 - **Moving Averages**: SMA (7, 25, 99 periods), EMA (12, 26 periods)
@@ -26,6 +27,13 @@ This is a comprehensive cryptocurrency trading and prediction tool that combines
 - **XGBoost**: Gradient boosting for classification (GPU when available)
 - **Logistic Regression**: Baseline linear model
 - **Ensemble Method**: Weighted combination of all models for final signals
+
+### 🧠 AI-Powered Analysis (Claude Opus 4.1)
+- **Market Analysis**: Comprehensive analysis of market conditions and trends
+- **Trading Recommendations**: AI-powered buy/sell/hold recommendations with reasoning
+- **Risk Assessment**: Intelligent risk evaluation based on multiple factors
+- **Key Insights**: Bullet-point summary of critical market factors
+- **Natural Language Explanations**: Easy-to-understand interpretations of technical signals
 
 ### 💼 Wallet Integration
 - **Bitcoin Testnet**: Wallet creation and balance tracking
@@ -83,6 +91,13 @@ For live trading, you'll need:
 - **Binance API Key**: For market data and trading
 - **Binance Secret Key**: For authenticated operations
 - **Testnet Mode**: Recommended for learning and testing
+
+For AI-powered insights (optional but recommended):
+- **Anthropic API Key**: Set the `ANTHROPIC_API_KEY` environment variable
+  ```bash
+  export ANTHROPIC_API_KEY="your-api-key-here"
+  ```
+- Get your API key from: https://console.anthropic.com/
 
 ⚠️ **Always use testnet/sandbox mode initially**
 
