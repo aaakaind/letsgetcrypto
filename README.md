@@ -12,6 +12,8 @@
 - **🖥️ Professional GUI**: PyQt5 interface with real-time charts and controls
 - **🛡️ Risk Management**: Position sizing, daily limits, comprehensive error handling
 - **🔌 MCP Server**: Model Context Protocol server for AI assistant integration
+- **🤝 MCP Server**: AI assistant integration via Model Context Protocol
+- **☁️ AWS Deployment**: Production-ready deployment to AWS with ECS and RDS
 
 ## 🚀 Quick Start
 
@@ -53,6 +55,8 @@ python main.py
 - **[Complete User Guide](README_APP.md)**: Detailed features and usage
 - **[MCP Server Guide](README_MCP.md)**: AI assistant integration with Model Context Protocol
 - **[Integration Guide](INTEGRATION_GUIDE.md)**: Step-by-step setup for MCP clients
+- **[AWS Deployment Guide](AWS_DEPLOYMENT.md)**: Production deployment to AWS
+- **[MCP Server Guide](MCP_SERVER.md)**: AI assistant integration via Model Context Protocol
 - **[Installation Guide](requirements.txt)**: All dependencies
 - **[Risk Disclosure](README_APP.md#important-disclaimers)**: Trading risks and limitations
 
