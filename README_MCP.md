@@ -70,6 +70,10 @@ Run the test script to verify functionality:
 python3 test_mcp_server.py
 ```
 
+### Quick Setup Guide
+
+For detailed step-by-step integration instructions, see the **[Integration Guide](INTEGRATION_GUIDE.md)**.
+
 ### Configuring for MCP Clients
 
 Add the server to your MCP client configuration (e.g., Claude Desktop, VS Code):
@@ -124,13 +128,51 @@ The AI assistant will use the MCP tools to fetch and analyze the data.
 ## Architecture
 
 ```
-crypto_mcp_server.py
-├── CryptoMCPServer (Main server class)
-│   ├── Tool handlers (get_crypto_price, etc.)
-│   ├── Resource handlers (server-info, supported-coins)
-│   └── MCP protocol handlers (initialize, tools/list, etc.)
-└── HeadlessCryptoAPI (Data provider)
-    └── CoinGecko API integration
+┌─────────────────────────────────────────────────────────────┐
+│                      AI Assistant / MCP Client               │
+│                   (Claude, VS Code, Custom)                  │
+└────────────────────────┬────────────────────────────────────┘
+                         │
+                         │ JSON-RPC 2.0 over stdio
+                         │
+┌────────────────────────┴────────────────────────────────────┐
+│                  crypto_mcp_server.py                        │
+│  ┌──────────────────────────────────────────────────────┐   │
+│  │              CryptoMCPServer                         │   │
+│  │  ┌────────────────────────────────────────────┐     │   │
+│  │  │  MCP Protocol Handlers                     │     │   │
+│  │  │  - initialize                              │     │   │
+│  │  │  - tools/list, tools/call                  │     │   │
+│  │  │  - resources/list, resources/read          │     │   │
+│  │  └────────────────────────────────────────────┘     │   │
+│  │  ┌────────────────────────────────────────────┐     │   │
+│  │  │  Tool Implementations                      │     │   │
+│  │  │  - get_crypto_price                        │     │   │
+│  │  │  - get_crypto_history                      │     │   │
+│  │  │  - get_market_overview                     │     │   │
+│  │  │  - analyze_cryptocurrency                  │     │   │
+│  │  │  - get_supported_coins                     │     │   │
+│  │  └────────────────────────────────────────────┘     │   │
+│  └──────────────────────┬───────────────────────────────┘   │
+│                         │                                    │
+│  ┌──────────────────────┴───────────────────────────────┐   │
+│  │              HeadlessCryptoAPI                       │   │
+│  │  - fetch_price_data                                  │   │
+│  │  - calculate_technical_indicators                    │   │
+│  │  - generate_signals                                  │   │
+│  │  - get_market_overview                               │   │
+│  │  - analyze_cryptocurrency                            │   │
+│  └──────────────────────┬───────────────────────────────┘   │
+└─────────────────────────┼────────────────────────────────────┘
+                          │
+                          │ HTTPS API Calls
+                          │
+┌─────────────────────────┴────────────────────────────────────┐
+│                     CoinGecko API                             │
+│  - Market prices and historical data                         │
+│  - Market cap, volume, rankings                              │
+│  - Technical data points                                     │
+└───────────────────────────────────────────────────────────────┘
 ```
 
 ## Data Sources
@@ -214,6 +256,47 @@ For issues or questions:
 - Verify API connectivity
 - Test with the included test script
 - Review the main project documentation
+
+## Quick Reference
+
+### MCP Tools
+
+| Tool Name | Parameters | Returns |
+|-----------|------------|---------|
+| `get_crypto_price` | `coin_id: string` | Current price, 24h change, volume, market cap |
+| `get_crypto_history` | `coin_id: string, days?: int` | Historical price data (default: 30 days) |
+| `get_market_overview` | `limit?: int` | Top cryptocurrencies by market cap (default: 10) |
+| `analyze_cryptocurrency` | `coin_id: string, days?: int` | Technical analysis, signals, recommendations |
+| `get_supported_coins` | None | List of supported cryptocurrency IDs |
+
+### MCP Resources
+
+| Resource URI | Description |
+|--------------|-------------|
+| `crypto://supported-coins` | JSON list of all supported cryptocurrencies |
+| `crypto://server-info` | Server name, version, and description |
+
+### Example AI Assistant Queries
+
+Once configured, you can ask:
+- "What's the current price of Bitcoin?"
+- "Show me the top 10 cryptocurrencies by market cap"
+- "Analyze Ethereum's performance over the last 30 days"
+- "What cryptocurrencies does the server support?"
+- "Get historical data for Cardano over the last 7 days"
+
+### Configuration Template
+
+```json
+{
+  "mcpServers": {
+    "crypto-data": {
+      "command": "python3",
+      "args": ["/path/to/crypto_mcp_server.py"]
+    }
+  }
+}
+```
 
 ---
 
