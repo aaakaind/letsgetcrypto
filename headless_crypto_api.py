@@ -31,7 +31,7 @@ try:
     ML_AVAILABLE = True
 except ImportError:
     ML_AVAILABLE = False
-    print("⚠️ ML libraries not available. Using simplified mode.")
+    print("⚠️ ML libraries not available. Using simplified mode.", file=sys.stderr)
 
 # Technical analysis
 try:
@@ -39,7 +39,7 @@ try:
     TA_AVAILABLE = True
 except ImportError:
     TA_AVAILABLE = False
-    print("⚠️ Technical analysis library not available.")
+    print("⚠️ Technical analysis library not available.", file=sys.stderr)
 
 # Configure logging
 logging.basicConfig(
