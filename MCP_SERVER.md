@@ -50,6 +50,20 @@ List all pre-configured supported cryptocurrency IDs.
 
 **Returns:** JSON with list of supported coin IDs
 
+## Quick Start
+
+For the impatient:
+
+```bash
+# 1. Install dependencies
+pip install -r requirements.txt
+
+# 2. Test the server
+python mcp_server.py --http
+
+# 3. Add to Claude Desktop config (see Configuration section below)
+```
+
 ## Installation
 
 ### Prerequisites
