@@ -51,6 +51,7 @@ python main.py
 
 - **[Complete User Guide](README_APP.md)**: Detailed features and usage
 - **[Installation Guide](requirements.txt)**: All dependencies
+- **[Claude MCP Server](MCP_SERVER.md)**: Use with Claude AI via Model Context Protocol
 - **[Risk Disclosure](README_APP.md#important-disclaimers)**: Trading risks and limitations
 
 ## 🛠️ Technical Stack
@@ -61,6 +62,23 @@ python main.py
 - **Crypto**: bitcoinlib, web3.py (testnet wallets)
 - **ML**: LSTM neural networks, ensemble methods
 
+## 🤖 Claude AI Integration
+
+Use LetsGetCrypto with Claude AI via the Model Context Protocol (MCP):
+
+```bash
+# Start the MCP server
+python mcp_server.py
+```
+
+Once configured with Claude Desktop, you can ask Claude:
+- "What's the current Bitcoin price?"
+- "Analyze Ethereum's technical indicators"
+- "Should I buy or sell Solana?"
+- "Give me a market overview of top cryptocurrencies"
+
+See **[MCP_SERVER.md](MCP_SERVER.md)** for complete setup instructions.
+
 ## 🔧 Development
 
 ```bash
@@ -69,6 +87,9 @@ python -c "from main import *; print('✓ All imports successful')"
 
 # Run validation tests
 python -c "exec(open('main.py').read().split('if __name__')[0]); print('✓ Tests passed')"
+
+# Test MCP server
+python test_mcp_server.py
 ```
 
 ## 📄 License
