@@ -1,0 +1,20 @@
+{
+  "mcpServers": {
+    "crypto-data": {
+      "command": "/home/runner/work/letsgetcrypto/letsgetcrypto/run_mcp_server.sh",
+      "args": [],
+      "description": "Cryptocurrency data and analysis server via MCP",
+      "tools": [
+        "get_crypto_price",
+        "get_crypto_history",
+        "get_market_overview",
+        "analyze_cryptocurrency",
+        "get_supported_coins"
+      ],
+      "resources": [
+        "crypto://supported-coins",
+        "crypto://server-info"
+      ]
+    }
+  }
+}
