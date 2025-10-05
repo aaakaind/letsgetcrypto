@@ -1,0 +1,11 @@
+{
+  "mcpServers": {
+    "letsgetcrypto": {
+      "command": "python",
+      "args": [
+        "mcp_server.py"
+      ],
+      "description": "Cryptocurrency trading and analysis tools with real-time market data and technical analysis"
+    }
+  }
+}
