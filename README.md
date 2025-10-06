@@ -7,12 +7,12 @@
 - **📊 Multi-Source Data**: CoinGecko, Binance, Fear & Greed Index, News & Social Sentiment
 - **🔬 Technical Analysis**: 15+ indicators including SMA, EMA, RSI, MACD, Bollinger Bands
 - **🤖 Machine Learning**: LSTM, XGBoost, Logistic Regression with ensemble predictions
+- **🔄 Feedback Loop**: Automated continuous learning with tiered training system (NEW!)
 - **💼 Wallet Integration**: Bitcoin & Ethereum testnet support
 - **⚡ Automated Trading**: Risk-managed trading with stop-loss and take-profit
 - **🖥️ Professional GUI**: PyQt5 interface with real-time charts and controls
 - **🛡️ Risk Management**: Position sizing, daily limits, comprehensive error handling
 - **🔌 MCP Server**: Model Context Protocol server for AI assistant integration
-- **🤝 MCP Server**: AI assistant integration via Model Context Protocol
 - **☁️ AWS Deployment**: Production-ready deployment to AWS with ECS and RDS
 
 ## 🚀 Quick Start
@@ -36,6 +36,25 @@ python main.py
    - Get predictions
    - Configure trading (optional)
 
+## 🔄 Feedback Loop: Automated Continuous Learning
+
+The application now includes an **intelligent feedback loop system** that automatically trains and improves ML models over time:
+
+### Key Features
+- **🎯 Tiered Training**: Three-tier system with hourly (basic), 6-hourly (intermediate), and daily (advanced) training
+- **📊 Performance Tracking**: Monitors model accuracy and identifies performance trends
+- **⚡ Smart Triggers**: Automatically retrains when performance drops or time intervals elapse
+- **📝 Prediction Logging**: Tracks predictions vs actual outcomes for continuous learning
+- **🔧 Configurable**: Adjust training intervals, thresholds, and evaluation windows
+
+### Quick Usage
+1. Enable automatic feedback loop in the GUI
+2. The system runs in the background, checking for retraining needs every hour
+3. View feedback loop status to see performance trends and training history
+4. Manually trigger training cycles when needed
+
+See **[FEEDBACK_LOOP.md](FEEDBACK_LOOP.md)** for detailed documentation.
+
 ## ⚠️ IMPORTANT DISCLAIMERS
 
 **🎓 EDUCATIONAL PURPOSE ONLY**
@@ -53,10 +72,10 @@ python main.py
 ## 📚 Documentation
 
 - **[Complete User Guide](README_APP.md)**: Detailed features and usage
+- **[Feedback Loop Guide](FEEDBACK_LOOP.md)**: Automated training and continuous learning (NEW!)
 - **[MCP Server Guide](README_MCP.md)**: AI assistant integration with Model Context Protocol
 - **[Integration Guide](INTEGRATION_GUIDE.md)**: Step-by-step setup for MCP clients
 - **[AWS Deployment Guide](AWS_DEPLOYMENT.md)**: Production deployment to AWS
-- **[MCP Server Guide](MCP_SERVER.md)**: AI assistant integration via Model Context Protocol
 - **[Installation Guide](requirements.txt)**: All dependencies
 - **[Risk Disclosure](README_APP.md#important-disclaimers)**: Trading risks and limitations
 
