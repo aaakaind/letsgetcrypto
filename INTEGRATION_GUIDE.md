@@ -2,6 +2,10 @@
 
 This guide explains how to integrate the Crypto MCP Server with various AI assistants and applications.
 
+## Prerequisites
+
+**📋 API Key Setup**: If you plan to use this MCP server with Claude Desktop or other Anthropic-powered tools, you may need to configure your Anthropic API key. See [CLAUDE_API_SETUP.md](CLAUDE_API_SETUP.md) for detailed instructions.
+
 ## Quick Start
 
 ### 1. Verify Installation
