@@ -4,6 +4,9 @@ from . import views
 app_name = 'crypto_api'
 
 urlpatterns = [
+    # Dashboard
+    path('dashboard/', views.dashboard, name='dashboard'),
+    
     # Health check endpoints
     path('health/', views.health_check, name='health_check'),
     path('readiness/', views.readiness_check, name='readiness_check'),
