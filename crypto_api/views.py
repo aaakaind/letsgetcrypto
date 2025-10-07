@@ -3,6 +3,7 @@ import time
 from functools import wraps
 
 from django.http import JsonResponse
+from django.shortcuts import render
 from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_http_methods
 from django.conf import settings
@@ -213,3 +214,8 @@ def get_market_overview(request):
     }
     
     return json_response_with_timestamp(result)
+
+
+def dashboard(request):
+    """Render the main dashboard page"""
+    return render(request, 'dashboard.html')
