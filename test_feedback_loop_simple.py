@@ -111,7 +111,7 @@ gui_elements = [
     'def run_feedback_loop_cycle',
     'def show_feedback_loop_status',
     'def auto_feedback_loop',
-    'feedback_group = QGroupBox("Feedback Loop'
+    'feedback_group = QGroupBox("Feedback Loop")'
 ]
 missing_gui = []
 for element in gui_elements:
