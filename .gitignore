@@ -103,6 +103,7 @@ node_modules/
 
 # AWS deployment files (generated)
 aws/ecs-task-definition-updated.json
+aws-packages/
 
 # Docker Compose volumes
 postgres_data/
