@@ -75,6 +75,7 @@ python main.py
 - **[Complete User Guide](README_APP.md)**: Detailed features and usage for desktop GUI
 - **[MCP Server Guide](README_MCP.md)**: AI assistant integration with Model Context Protocol
 - **[Integration Guide](INTEGRATION_GUIDE.md)**: Step-by-step setup for MCP clients
+- **[Claude API Setup](CLAUDE_API_SETUP.md)**: Configure Anthropic Claude API key
 - **[AWS Deployment Guide](AWS_DEPLOYMENT.md)**: Production deployment to AWS
 - **[Installation Guide](requirements.txt)**: All dependencies
 - **[Risk Disclosure](README_APP.md#important-disclaimers)**: Trading risks and limitations
