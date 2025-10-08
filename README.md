@@ -17,7 +17,16 @@
 
 ## 🚀 Quick Start
 
-### Option 1: Web Dashboard (Recommended)
+### ☁️ Deploy to AWS (Production)
+
+**Want to run in the cloud?** See [QUICK_DEPLOY.md](QUICK_DEPLOY.md) for the fastest way to deploy to AWS.
+
+```bash
+./package-for-aws.sh 1.0.0
+# Upload the generated package to AWS Elastic Beanstalk or ECS
+```
+
+### Option 1: Web Dashboard (Recommended for Local Development)
 
 1. **Install Dependencies**:
 ```bash
@@ -71,13 +80,21 @@ python main.py
 
 ## 📚 Documentation
 
+### Getting Started
+- **[Quick Deploy to AWS](QUICK_DEPLOY.md)**: Fastest way to deploy to AWS (5 minutes) ⭐ NEW
 - **[Web Dashboard Guide](DASHBOARD_GUIDE.md)**: Complete guide to using the web interface
 - **[Complete User Guide](README_APP.md)**: Detailed features and usage for desktop GUI
+
+### Advanced Features
 - **[MCP Server Guide](README_MCP.md)**: AI assistant integration with Model Context Protocol
 - **[Integration Guide](INTEGRATION_GUIDE.md)**: Step-by-step setup for MCP clients
 - **[Claude API Setup](CLAUDE_API_SETUP.md)**: Configure Anthropic Claude API key
-- **[AWS Deployment Guide](AWS_DEPLOYMENT.md)**: Production deployment to AWS
+
+### Deployment
 - **[AWS Packaging Guide](PACKAGING_GUIDE.md)**: Create deployable packages for AWS ⭐ NEW
+- **[AWS Deployment Guide](AWS_DEPLOYMENT.md)**: Production deployment to AWS
+
+### Reference
 - **[Installation Guide](requirements.txt)**: All dependencies
 - **[Risk Disclosure](README_APP.md#important-disclaimers)**: Trading risks and limitations
 
