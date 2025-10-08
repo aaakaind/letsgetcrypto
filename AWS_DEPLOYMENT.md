@@ -14,6 +14,101 @@ The AWS deployment includes:
 - **Amazon VPC**: Isolated network with public and private subnets
 - **Amazon ECR**: Container image registry
 
+## 📦 Deployment Packages
+
+LetsGetCrypto provides ready-to-deploy packages for different AWS services. Choose the package that best fits your needs:
+
+### Creating Deployment Packages
+
+Run the packaging script to create deployment-ready packages:
+
+```bash
+# Make the script executable
+chmod +x package-for-aws.sh
+
+# Create packages (optionally specify version)
+./package-for-aws.sh 1.0.0
+```
+
+This creates three packages in the `aws-packages/` directory:
+
+1. **CloudFormation/ECS Fargate Package** (Recommended for production)
+   - Best for: Scalable production deployments
+   - Cost: ~$50-100/month
+   - Features: Auto-scaling, load balancer, managed database
+   
+2. **Elastic Beanstalk Package** (Easiest deployment)
+   - Best for: Quick deployments and testing
+   - Cost: ~$30-50/month
+   - Features: Simple management, automatic updates, lower cost
+
+3. **Complete Source Package**
+   - Best for: Custom deployments or development
+   - Contains all source code and configuration
+
+See `aws-packages/PACKAGE_SUMMARY.md` for detailed information on each package.
+
+### Option 1: Elastic Beanstalk (Easiest) 🚀
+
+**Perfect for**: Quick deployments, testing, small-scale applications
+
+#### Via AWS Console (No Command Line Required)
+
+1. Extract the Elastic Beanstalk package:
+   ```bash
+   unzip aws-packages/letsgetcrypto-beanstalk-*.zip
+   ```
+
+2. Go to [AWS Elastic Beanstalk Console](https://console.aws.amazon.com/elasticbeanstalk)
+
+3. Click **Create Application**
+
+4. Configure:
+   - Application name: `letsgetcrypto`
+   - Platform: Python 3.11
+   - Upload the ZIP file created above
+
+5. Configure environment variables:
+   - `DJANGO_DEBUG=False`
+   - `DJANGO_ALLOWED_HOSTS=*`
+   - `DJANGO_SECRET_KEY=<generate-random-key>`
+
+6. Click **Create Environment**
+
+7. Wait 5-10 minutes for deployment
+
+8. Access your application at the provided URL!
+
+#### Via CLI
+
+```bash
+# Install EB CLI if not already installed
+pip install awsebcli
+
+# Extract and enter the package directory
+unzip aws-packages/letsgetcrypto-beanstalk-*.zip -d letsgetcrypto-eb
+cd letsgetcrypto-eb
+
+# Initialize Elastic Beanstalk
+eb init -p python-3.11 letsgetcrypto --region us-east-1
+
+# Create environment with database
+eb create letsgetcrypto-env \
+  --database.engine postgres \
+  --database.instance db.t3.micro \
+  --instance-type t3.small \
+  --envvars DJANGO_DEBUG=False,DJANGO_ALLOWED_HOSTS=*
+
+# Open in browser
+eb open
+```
+
+**Deployment time:** 5-10 minutes
+
+### Option 2: CloudFormation/ECS Fargate (Production)
+
+**Perfect for**: Production deployments requiring scalability
+
 ## 🚀 Quick Deployment
 
 ### Prerequisites

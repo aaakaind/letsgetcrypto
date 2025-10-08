@@ -77,6 +77,7 @@ python main.py
 - **[Integration Guide](INTEGRATION_GUIDE.md)**: Step-by-step setup for MCP clients
 - **[Claude API Setup](CLAUDE_API_SETUP.md)**: Configure Anthropic Claude API key
 - **[AWS Deployment Guide](AWS_DEPLOYMENT.md)**: Production deployment to AWS
+- **[AWS Packaging Guide](PACKAGING_GUIDE.md)**: Create deployable packages for AWS ⭐ NEW
 - **[Installation Guide](requirements.txt)**: All dependencies
 - **[Risk Disclosure](README_APP.md#important-disclaimers)**: Trading risks and limitations
 
