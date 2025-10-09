@@ -14,6 +14,7 @@
 - **🛡️ Risk Management**: Position sizing, daily limits, comprehensive error handling
 - **🔌 MCP Server**: Model Context Protocol server for AI assistant integration
 - **☁️ AWS Deployment**: Production-ready deployment to AWS with ECS and RDS
+- **🔄 CI/CD Pipeline**: Automated builds and deployments with AWS CodeBuild and CodePipeline
 
 ## 🚀 Quick Start
 
@@ -93,6 +94,7 @@ python main.py
 ### Deployment
 - **[AWS Packaging Guide](PACKAGING_GUIDE.md)**: Create deployable packages for AWS ⭐ NEW
 - **[AWS Deployment Guide](AWS_DEPLOYMENT.md)**: Production deployment to AWS
+- **[CI/CD Pipeline Guide](CICD_GUIDE.md)**: Automated builds and deployments with AWS CodeBuild ⭐ NEW
 
 ### Reference
 - **[Installation Guide](requirements.txt)**: All dependencies

@@ -1,0 +1,307 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: 'AWS CodeBuild and CodePipeline CI/CD setup for LetsGetCrypto'
+
+Parameters:
+  GitHubRepository:
+    Description: GitHub repository name (e.g., username/repository)
+    Type: String
+    Default: aaakaind/letsgetcrypto
+  
+  GitHubBranch:
+    Description: GitHub branch to track
+    Type: String
+    Default: main
+  
+  GitHubToken:
+    Description: GitHub personal access token for webhook and source access
+    Type: String
+    NoEcho: true
+  
+  ECSClusterName:
+    Description: Name of the ECS cluster to deploy to (optional)
+    Type: String
+    Default: ''
+  
+  ECSServiceName:
+    Description: Name of the ECS service to update (optional)
+    Type: String
+    Default: ''
+
+Conditions:
+  HasECSCluster: !Not [!Equals [!Ref ECSClusterName, '']]
+
+Resources:
+  # S3 Bucket for Pipeline Artifacts
+  ArtifactBucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      BucketName: !Sub '${AWS::StackName}-artifacts-${AWS::AccountId}'
+      VersioningConfiguration:
+        Status: Enabled
+      BucketEncryption:
+        ServerSideEncryptionConfiguration:
+          - ServerSideEncryptionByDefault:
+              SSEAlgorithm: AES256
+      PublicAccessBlockConfiguration:
+        BlockPublicAcls: true
+        BlockPublicPolicy: true
+        IgnorePublicAcls: true
+        RestrictPublicBuckets: true
+      LifecycleConfiguration:
+        Rules:
+          - Id: DeleteOldArtifacts
+            Status: Enabled
+            ExpirationInDays: 30
+
+  # CodeBuild Service Role
+  CodeBuildServiceRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: !Sub '${AWS::StackName}-codebuild-role'
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: codebuild.amazonaws.com
+            Action: sts:AssumeRole
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/AmazonEC2ContainerRegistryPowerUser
+      Policies:
+        - PolicyName: CodeBuildPolicy
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action:
+                  - logs:CreateLogGroup
+                  - logs:CreateLogStream
+                  - logs:PutLogEvents
+                Resource: !Sub 'arn:aws:logs:${AWS::Region}:${AWS::AccountId}:log-group:/aws/codebuild/*'
+              - Effect: Allow
+                Action:
+                  - s3:GetObject
+                  - s3:PutObject
+                  - s3:GetObjectVersion
+                Resource:
+                  - !Sub '${ArtifactBucket.Arn}/*'
+              - Effect: Allow
+                Action:
+                  - ecr:GetAuthorizationToken
+                  - sts:GetCallerIdentity
+                Resource: '*'
+              - Effect: Allow
+                Action:
+                  - ecr:CreateRepository
+                  - ecr:DescribeRepositories
+                Resource: !Sub 'arn:aws:ecr:${AWS::Region}:${AWS::AccountId}:repository/letsgetcrypto'
+              - !If
+                - HasECSCluster
+                - Effect: Allow
+                  Action:
+                    - ecs:UpdateService
+                    - ecs:DescribeServices
+                    - ecs:DescribeTasks
+                    - ecs:ListTasks
+                  Resource: '*'
+                - !Ref AWS::NoValue
+
+  # CodeBuild Project
+  CodeBuildProject:
+    Type: AWS::CodeBuild::Project
+    Properties:
+      Name: !Sub '${AWS::StackName}-build'
+      Description: Build and deploy LetsGetCrypto application
+      ServiceRole: !GetAtt CodeBuildServiceRole.Arn
+      Artifacts:
+        Type: CODEPIPELINE
+      Environment:
+        Type: LINUX_CONTAINER
+        ComputeType: BUILD_GENERAL1_SMALL
+        Image: aws/codebuild/standard:7.0
+        PrivilegedMode: true  # Required for Docker builds
+        EnvironmentVariables:
+          - Name: AWS_DEFAULT_REGION
+            Value: !Ref AWS::Region
+          - Name: AWS_ACCOUNT_ID
+            Value: !Ref AWS::AccountId
+          - Name: ECR_REPOSITORY
+            Value: letsgetcrypto
+          - Name: CLUSTER_NAME
+            Value: !Ref ECSClusterName
+          - Name: SERVICE_NAME
+            Value: !Ref ECSServiceName
+      Source:
+        Type: CODEPIPELINE
+        BuildSpec: buildspec.yml
+      TimeoutInMinutes: 30
+      Cache:
+        Type: LOCAL
+        Modes:
+          - LOCAL_DOCKER_LAYER_CACHE
+          - LOCAL_SOURCE_CACHE
+      LogsConfig:
+        CloudWatchLogs:
+          Status: ENABLED
+          GroupName: !Sub '/aws/codebuild/${AWS::StackName}'
+
+  # CodePipeline Service Role
+  CodePipelineServiceRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: !Sub '${AWS::StackName}-codepipeline-role'
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: codepipeline.amazonaws.com
+            Action: sts:AssumeRole
+      Policies:
+        - PolicyName: CodePipelinePolicy
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action:
+                  - s3:GetObject
+                  - s3:PutObject
+                  - s3:GetObjectVersion
+                  - s3:GetBucketVersioning
+                Resource:
+                  - !Sub '${ArtifactBucket.Arn}/*'
+                  - !GetAtt ArtifactBucket.Arn
+              - Effect: Allow
+                Action:
+                  - codebuild:BatchGetBuilds
+                  - codebuild:StartBuild
+                Resource: !GetAtt CodeBuildProject.Arn
+              - !If
+                - HasECSCluster
+                - Effect: Allow
+                  Action:
+                    - ecs:DescribeServices
+                    - ecs:DescribeTaskDefinition
+                    - ecs:DescribeTasks
+                    - ecs:ListTasks
+                    - ecs:RegisterTaskDefinition
+                    - ecs:UpdateService
+                  Resource: '*'
+                - !Ref AWS::NoValue
+              - !If
+                - HasECSCluster
+                - Effect: Allow
+                  Action:
+                    - iam:PassRole
+                  Resource: '*'
+                  Condition:
+                    StringEqualsIfExists:
+                      iam:PassedToService:
+                        - ecs-tasks.amazonaws.com
+                - !Ref AWS::NoValue
+
+  # CodePipeline
+  Pipeline:
+    Type: AWS::CodePipeline::Pipeline
+    Properties:
+      Name: !Sub '${AWS::StackName}-pipeline'
+      RoleArn: !GetAtt CodePipelineServiceRole.Arn
+      ArtifactStore:
+        Type: S3
+        Location: !Ref ArtifactBucket
+      Stages:
+        # Source Stage - GitHub
+        - Name: Source
+          Actions:
+            - Name: SourceAction
+              ActionTypeId:
+                Category: Source
+                Owner: ThirdParty
+                Provider: GitHub
+                Version: '1'
+              Configuration:
+                Owner: !Select [0, !Split ['/', !Ref GitHubRepository]]
+                Repo: !Select [1, !Split ['/', !Ref GitHubRepository]]
+                Branch: !Ref GitHubBranch
+                OAuthToken: !Ref GitHubToken
+                PollForSourceChanges: false
+              OutputArtifacts:
+                - Name: SourceOutput
+        
+        # Build Stage - CodeBuild
+        - Name: Build
+          Actions:
+            - Name: BuildAction
+              ActionTypeId:
+                Category: Build
+                Owner: AWS
+                Provider: CodeBuild
+                Version: '1'
+              Configuration:
+                ProjectName: !Ref CodeBuildProject
+              InputArtifacts:
+                - Name: SourceOutput
+              OutputArtifacts:
+                - Name: BuildOutput
+        
+        # Deploy Stage - ECS (Optional - only if ECS cluster is provided)
+        - !If
+          - HasECSCluster
+          - Name: Deploy
+            Actions:
+              - Name: DeployAction
+                ActionTypeId:
+                  Category: Deploy
+                  Owner: AWS
+                  Provider: ECS
+                  Version: '1'
+                Configuration:
+                  ClusterName: !Ref ECSClusterName
+                  ServiceName: !Ref ECSServiceName
+                  FileName: imagedefinitions.json
+                InputArtifacts:
+                  - Name: BuildOutput
+          - !Ref AWS::NoValue
+
+  # GitHub Webhook
+  PipelineWebhook:
+    Type: AWS::CodePipeline::Webhook
+    Properties:
+      Name: !Sub '${AWS::StackName}-webhook'
+      Authentication: GITHUB_HMAC
+      AuthenticationConfiguration:
+        SecretToken: !Ref GitHubToken
+      Filters:
+        - JsonPath: $.ref
+          MatchEquals: 'refs/heads/{Branch}'
+      TargetPipeline: !Ref Pipeline
+      TargetAction: SourceAction
+      TargetPipelineVersion: !GetAtt Pipeline.Version
+      RegisterWithThirdParty: true
+
+Outputs:
+  PipelineName:
+    Description: Name of the CodePipeline
+    Value: !Ref Pipeline
+    Export:
+      Name: !Sub '${AWS::StackName}-pipeline-name'
+  
+  CodeBuildProjectName:
+    Description: Name of the CodeBuild project
+    Value: !Ref CodeBuildProject
+    Export:
+      Name: !Sub '${AWS::StackName}-codebuild-project'
+  
+  ArtifactBucketName:
+    Description: Name of the S3 bucket for pipeline artifacts
+    Value: !Ref ArtifactBucket
+    Export:
+      Name: !Sub '${AWS::StackName}-artifact-bucket'
+  
+  CodeBuildConsoleURL:
+    Description: URL to CodeBuild project in AWS Console
+    Value: !Sub 'https://console.aws.amazon.com/codesuite/codebuild/${AWS::AccountId}/projects/${CodeBuildProject}/history?region=${AWS::Region}'
+  
+  PipelineConsoleURL:
+    Description: URL to CodePipeline in AWS Console
+    Value: !Sub 'https://console.aws.amazon.com/codesuite/codepipeline/pipelines/${Pipeline}/view?region=${AWS::Region}'
