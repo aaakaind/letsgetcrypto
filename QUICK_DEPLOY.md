@@ -42,6 +42,27 @@ chmod +x deploy-aws.sh
 
 **Cost**: ~$50-100/month
 
+## 🔄 Step 3: (Optional) Setup CI/CD Pipeline
+
+**Automate deployments with every Git push!**
+
+```bash
+# Set up automated CI/CD pipeline
+chmod +x setup-cicd.sh
+export GITHUB_TOKEN="your_github_token_here"
+./setup-cicd.sh
+```
+
+**What you get:**
+- ✅ Automatic builds on code changes
+- ✅ Docker image builds and pushes to ECR
+- ✅ Automated deployments to ECS (optional)
+- ✅ Build logs and notifications
+
+**Cost**: ~$3/month for 100 builds
+
+See [CICD_GUIDE.md](CICD_GUIDE.md) for detailed setup instructions.
+
 ## Which Should I Choose?
 
 | Use Case | Recommended | Why |
@@ -50,6 +71,7 @@ chmod +x deploy-aws.sh
 | Small app, low traffic | Elastic Beanstalk | Lower cost, simpler management |
 | Production, high traffic | ECS Fargate | Better scaling, more control |
 | Need containers | ECS Fargate | Native container support |
+| Continuous deployment | ECS Fargate + CI/CD | Automated updates on push |
 
 ## Need Help?
 
@@ -87,4 +109,5 @@ aws cloudformation delete-stack --stack-name letsgetcrypto-stack --region us-eas
 For detailed documentation, see:
 - [PACKAGING_GUIDE.md](PACKAGING_GUIDE.md) - Complete packaging guide
 - [AWS_DEPLOYMENT.md](AWS_DEPLOYMENT.md) - AWS deployment details
+- [CICD_GUIDE.md](CICD_GUIDE.md) - CI/CD pipeline setup ⭐ NEW
 - [README.md](README.md) - Application documentation
