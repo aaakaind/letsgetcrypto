@@ -26,6 +26,10 @@ def check_dependencies():
         'xgboost', 'ccxt', 'requests', 'ta', 'loguru'
     ]
     
+    optional_packages = [
+        'anthropic'
+    ]
+    
     missing_packages = []
     
     for package in required_packages:
@@ -36,12 +40,29 @@ def check_dependencies():
             missing_packages.append(package)
             print(f"❌ {package}")
     
+    # Check optional packages
+    for package in optional_packages:
+        try:
+            __import__(package.lower().replace('-', '_'))
+            print(f"✓ {package} (optional - AI features)")
+        except ImportError:
+            print(f"⚠️  {package} (optional - AI features disabled)")
+    
     if missing_packages:
         print(f"\n❌ Missing packages: {', '.join(missing_packages)}")
         print("Install them with: pip install -r requirements.txt")
         return False
     
-    print("✓ All dependencies satisfied")
+    print("✓ All required dependencies satisfied")
+    
+    # Check for Claude API key
+    if os.environ.get('ANTHROPIC_API_KEY'):
+        print("✓ Claude AI configured (ANTHROPIC_API_KEY set)")
+    else:
+        print("ℹ️  Claude AI not configured (optional)")
+        print("   Set ANTHROPIC_API_KEY for AI-powered insights")
+        print("   See CLAUDE_SETUP.md for details")
+    
     return True
 
 def main():

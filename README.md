@@ -7,6 +7,7 @@
 - **📊 Multi-Source Data**: CoinGecko, Binance, Fear & Greed Index, News & Social Sentiment
 - **🔬 Technical Analysis**: 15+ indicators including SMA, EMA, RSI, MACD, Bollinger Bands
 - **🤖 Machine Learning**: LSTM, XGBoost, Logistic Regression with ensemble predictions
+- **🧠 AI-Powered Insights**: Claude Opus 4.1 integration for intelligent market analysis
 - **🔄 Feedback Loop**: Automated continuous learning with tiered training system (NEW!)
 - **💼 Wallet Integration**: Bitcoin & Ethereum testnet support
 - **⚡ Automated Trading**: Risk-managed trading with stop-loss and take-profit
@@ -61,18 +62,23 @@ python manage.py runserver
 pip install -r requirements.txt
 ```
 
-2. **Run the Application**:
+2. **Configure Claude AI** (Optional but recommended):
+```bash
+export ANTHROPIC_API_KEY="your-api-key-here"
+```
+
+3. **Run the Application**:
 ```bash
 python run.py
 # or directly:
 python main.py
 ```
 
-3. **Start Trading** (Recommended: Use testnet first):
+4. **Start Trading** (Recommended: Use testnet first):
    - Select a cryptocurrency
    - Fetch market data
    - Train ML models
-   - Get predictions
+   - Get predictions (with AI insights if configured)
    - Configure trading (optional)
 
 ## 🔄 Feedback Loop: Automated Continuous Learning
@@ -111,6 +117,7 @@ See **[FEEDBACK_LOOP.md](FEEDBACK_LOOP.md)** for detailed documentation.
 ## 📚 Documentation
 
 - **[Complete User Guide](README_APP.md)**: Detailed features and usage
+- **[Claude AI Setup Guide](CLAUDE_SETUP.md)**: Configure AI-powered insights
 - **[Feedback Loop Guide](FEEDBACK_LOOP.md)**: Automated training and continuous learning (NEW!)
 ### Getting Started
 - **[GitHub Pages Setup](GITHUB_PAGES.md)**: Free static dashboard deployment ⭐ NEW
@@ -156,6 +163,10 @@ Feature-rich desktop application with advanced capabilities:
 
 ## 🛠️ Technical Stack
 
+- **Backend**: Python 3.8+, pandas, numpy, scikit-learn, xgboost, tensorflow
+- **APIs**: CCXT (Binance), CoinGecko, Fear & Greed Index, Anthropic Claude
+- **AI**: Claude Opus 4.1 for intelligent market analysis and insights
+- **GUI**: PyQt5, matplotlib
 - **Backend**: Python 3.8+, Django, pandas, numpy, scikit-learn, xgboost, tensorflow
 - **APIs**: CCXT (Binance), CoinGecko, Fear & Greed Index
 - **GUI**: PyQt5 (desktop), HTML/CSS/JavaScript (web dashboard)

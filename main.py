@@ -97,6 +97,15 @@ import ta
 # Logging setup
 from loguru import logger
 
+# Claude integration
+try:
+    from claude_analyzer import ClaudeAnalyzer
+    CLAUDE_AVAILABLE = True
+except ImportError:
+    ClaudeAnalyzer = None
+    CLAUDE_AVAILABLE = False
+    logger.warning("Claude Analyzer not available. AI insights disabled.")
+
 # Configure logging
 logger.add("crypto_trading.log", rotation="1 week", retention="4 weeks", level="INFO")
 
@@ -1372,6 +1381,13 @@ class CryptoPredictionApp(QMainWindow):
         self.trading_engine = TradingEngine()
         self.feedback_loop = FeedbackLoop(self.ml_models, self.data_fetcher)
         
+        # Initialize Claude analyzer if available
+        self.claude_analyzer = None
+        if CLAUDE_AVAILABLE:
+            self.claude_analyzer = ClaudeAnalyzer()
+            if self.claude_analyzer.is_available():
+                logger.info("Claude Opus 4.1 integration enabled in GUI")
+        
         # Data storage
         self.current_data = None
         self.predictions = {}
@@ -1816,6 +1832,52 @@ class CryptoPredictionApp(QMainWindow):
                 # Get ensemble prediction
                 self.predictions = self.ml_models.get_ensemble_prediction(X[-10:])  # Last 10 samples
                 
+                # Add Claude AI analysis if available
+                if self.claude_analyzer and self.claude_analyzer.is_available():
+                    self.status_label.setText("Generating AI analysis...")
+                    self.log_text.append(f"[{datetime.now().strftime('%H:%M:%S')}] Generating Claude AI insights...")
+                    
+                    try:
+                        # Prepare data for Claude
+                        latest_data = self.current_data.iloc[-1]
+                        coin_name = self.coin_combo.currentText().replace('-', ' ').title()
+                        
+                        tech_indicators = {
+                            'rsi': latest_data.get('rsi', None) if 'rsi' in self.current_data.columns else None,
+                            'macd': latest_data.get('macd', None) if 'macd' in self.current_data.columns else None,
+                            'sma_7': latest_data.get('sma_7', None) if 'sma_7' in self.current_data.columns else None,
+                            'sma_25': latest_data.get('sma_25', None) if 'sma_25' in self.current_data.columns else None,
+                            'volatility': latest_data.get('volatility', None) if 'volatility' in self.current_data.columns else None,
+                            'volume': latest_data.get('volume', None) if 'volume' in self.current_data.columns else None
+                        }
+                        
+                        # Get Fear & Greed Index if available
+                        fear_greed = None
+                        try:
+                            fg_data = self.data_fetcher.fetch_fear_greed_index()
+                            if fg_data:
+                                fear_greed = fg_data.get('value')
+                        except:
+                            pass
+                        
+                        # Get Claude analysis
+                        claude_result = self.claude_analyzer.analyze_market_data(
+                            coin_name=coin_name,
+                            current_price=latest_data['price'],
+                            price_change_24h=latest_data.get('price_change_24h', 0) if 'price_change_24h' in self.current_data.columns else 0,
+                            technical_indicators=tech_indicators,
+                            ml_predictions={'signal': self.predictions.get('signal', 'HOLD'), 
+                                          'confidence': self.predictions.get('ensemble', 0.5)},
+                            fear_greed_index=fear_greed
+                        )
+                        
+                        self.predictions['claude_analysis'] = claude_result
+                        self.log_text.append(f"[{datetime.now().strftime('%H:%M:%S')}] Claude AI analysis completed")
+                        
+                    except Exception as e:
+                        logger.error(f"Error generating Claude analysis: {e}")
+                        self.log_text.append(f"[{datetime.now().strftime('%H:%M:%S')}] Claude analysis error: {str(e)}")
+                
                 # Update predictions display
                 self.update_predictions_display()
                 
@@ -1862,7 +1924,34 @@ SIGNAL INTERPRETATION:
 BUY: High confidence upward price movement expected
 SELL: High confidence downward price movement expected  
 HOLD: Uncertain market conditions, maintain current position
+"""
 
+        # Add Claude AI Analysis if available
+        if 'claude_analysis' in self.predictions:
+            claude = self.predictions['claude_analysis']
+            display_text += f"""
+{'='*43}
+CLAUDE OPUS 4.1 AI ANALYSIS
+{'='*43}
+
+MARKET ANALYSIS:
+{claude.get('analysis', 'Not available')}
+
+RECOMMENDATION:
+{claude.get('recommendation', 'Not available')}
+
+RISK ASSESSMENT:
+{claude.get('risk_assessment', 'Not available')}
+"""
+            # Add key insights if available
+            insights = claude.get('key_insights', [])
+            if insights:
+                display_text += "\nKEY INSIGHTS:\n"
+                for i, insight in enumerate(insights, 1):
+                    display_text += f"{i}. {insight}\n"
+
+        display_text += f"""
+{'='*43}
 RISK DISCLAIMER:
 ---------------
 These predictions are based on historical data and technical indicators.
