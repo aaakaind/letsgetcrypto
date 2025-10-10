@@ -11,11 +11,20 @@
 - **⚡ Automated Trading**: Risk-managed trading with stop-loss and take-profit
 - **🖥️ Professional GUI**: PyQt5 desktop interface with real-time charts and controls
 - **🌐 Web Dashboard**: Modern, responsive web interface accessible from any browser
+- **📄 GitHub Pages**: Static dashboard deployment with free hosting
 - **🛡️ Risk Management**: Position sizing, daily limits, comprehensive error handling
 - **🔌 MCP Server**: Model Context Protocol server for AI assistant integration
 - **☁️ AWS Deployment**: Production-ready deployment to AWS with ECS and RDS
 
 ## 🚀 Quick Start
+
+### 🌐 Try the Live Demo (GitHub Pages)
+
+**Want to try it instantly?** The dashboard is available as a static demo:
+
+👉 **[View Live Demo](https://aaakaind.github.io/letsgetcrypto/)** (Once GitHub Pages is configured)
+
+See [GITHUB_PAGES.md](GITHUB_PAGES.md) for setup instructions.
 
 ### ☁️ Deploy to AWS (Production)
 
@@ -81,7 +90,8 @@ python main.py
 ## 📚 Documentation
 
 ### Getting Started
-- **[Quick Deploy to AWS](QUICK_DEPLOY.md)**: Fastest way to deploy to AWS (5 minutes) ⭐ NEW
+- **[GitHub Pages Setup](GITHUB_PAGES.md)**: Free static dashboard deployment ⭐ NEW
+- **[Quick Deploy to AWS](QUICK_DEPLOY.md)**: Fastest way to deploy to AWS (5 minutes)
 - **[Web Dashboard Guide](DASHBOARD_GUIDE.md)**: Complete guide to using the web interface
 - **[Complete User Guide](README_APP.md)**: Detailed features and usage for desktop GUI
 
@@ -91,7 +101,8 @@ python main.py
 - **[Claude API Setup](CLAUDE_API_SETUP.md)**: Configure Anthropic Claude API key
 
 ### Deployment
-- **[AWS Packaging Guide](PACKAGING_GUIDE.md)**: Create deployable packages for AWS ⭐ NEW
+- **[GitHub Pages Guide](GITHUB_PAGES.md)**: Free hosting with GitHub Pages ⭐ NEW
+- **[AWS Packaging Guide](PACKAGING_GUIDE.md)**: Create deployable packages for AWS
 - **[AWS Deployment Guide](AWS_DEPLOYMENT.md)**: Production deployment to AWS
 
 ### Reference
