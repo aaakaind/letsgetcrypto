@@ -7,6 +7,7 @@
 - **📊 Multi-Source Data**: CoinGecko, Binance, Fear & Greed Index, News & Social Sentiment
 - **🔬 Technical Analysis**: 15+ indicators including SMA, EMA, RSI, MACD, Bollinger Bands
 - **🤖 Machine Learning**: LSTM, XGBoost, Logistic Regression with ensemble predictions
+- **🔄 Feedback Loop**: Automated continuous learning with tiered training system (NEW!)
 - **💼 Wallet Integration**: Bitcoin & Ethereum testnet support
 - **⚡ Automated Trading**: Risk-managed trading with stop-loss and take-profit
 - **🖥️ Professional GUI**: PyQt5 desktop interface with real-time charts and controls
@@ -74,6 +75,25 @@ python main.py
    - Get predictions
    - Configure trading (optional)
 
+## 🔄 Feedback Loop: Automated Continuous Learning
+
+The application now includes an **intelligent feedback loop system** that automatically trains and improves ML models over time:
+
+### Key Features
+- **🎯 Tiered Training**: Three-tier system with hourly (basic), 6-hourly (intermediate), and daily (advanced) training
+- **📊 Performance Tracking**: Monitors model accuracy and identifies performance trends
+- **⚡ Smart Triggers**: Automatically retrains when performance drops or time intervals elapse
+- **📝 Prediction Logging**: Tracks predictions vs actual outcomes for continuous learning
+- **🔧 Configurable**: Adjust training intervals, thresholds, and evaluation windows
+
+### Quick Usage
+1. Enable automatic feedback loop in the GUI
+2. The system runs in the background, checking for retraining needs every hour
+3. View feedback loop status to see performance trends and training history
+4. Manually trigger training cycles when needed
+
+See **[FEEDBACK_LOOP.md](FEEDBACK_LOOP.md)** for detailed documentation.
+
 ## ⚠️ IMPORTANT DISCLAIMERS
 
 **🎓 EDUCATIONAL PURPOSE ONLY**
@@ -90,6 +110,8 @@ python main.py
 
 ## 📚 Documentation
 
+- **[Complete User Guide](README_APP.md)**: Detailed features and usage
+- **[Feedback Loop Guide](FEEDBACK_LOOP.md)**: Automated training and continuous learning (NEW!)
 ### Getting Started
 - **[GitHub Pages Setup](GITHUB_PAGES.md)**: Free static dashboard deployment ⭐ NEW
 - **[Quick Deploy to AWS](QUICK_DEPLOY.md)**: Fastest way to deploy to AWS (5 minutes)
