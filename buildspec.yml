@@ -1,0 +1,77 @@
+version: 0.2
+
+# AWS CodeBuild buildspec for LetsGetCrypto CI/CD Pipeline
+# This file defines the build process for automated deployment to AWS ECS
+
+phases:
+  pre_build:
+    commands:
+      - echo "🚀 Starting LetsGetCrypto CI/CD Pipeline"
+      - echo "========================================"
+      - echo "Build started on $(date)"
+      - echo "Commit SHA: $CODEBUILD_RESOLVED_SOURCE_VERSION"
+      
+      # Login to Amazon ECR
+      - echo "🔑 Logging into Amazon ECR..."
+      - aws --version
+      - ACCOUNT_ID=$(aws sts get-caller-identity --query Account --output text)
+      - AWS_DEFAULT_REGION=${AWS_DEFAULT_REGION:-us-east-1}
+      - ECR_REGISTRY=$ACCOUNT_ID.dkr.ecr.$AWS_DEFAULT_REGION.amazonaws.com
+      - ECR_REPOSITORY=${ECR_REPOSITORY:-letsgetcrypto}
+      - IMAGE_TAG=${CODEBUILD_RESOLVED_SOURCE_VERSION:-latest}
+      - aws ecr get-login-password --region $AWS_DEFAULT_REGION | docker login --username AWS --password-stdin $ECR_REGISTRY
+      
+      # Create ECR repository if it doesn't exist
+      - echo "📦 Checking ECR repository..."
+      - aws ecr describe-repositories --repository-names $ECR_REPOSITORY --region $AWS_DEFAULT_REGION || aws ecr create-repository --repository-name $ECR_REPOSITORY --region $AWS_DEFAULT_REGION
+      
+      # Install test dependencies (optional - uncomment if you want to run tests)
+      # - echo "📦 Installing test dependencies..."
+      # - pip install -r requirements.txt
+      
+      # Run tests (optional - uncomment if you want to run tests)
+      # - echo "🧪 Running tests..."
+      # - python -m pytest test_integration.py -v || echo "⚠️ Tests skipped or failed"
+      
+  build:
+    commands:
+      - echo "🔨 Building Docker image..."
+      - echo "Building image $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG"
+      
+      # Build Docker image
+      - docker build -t $ECR_REPOSITORY:$IMAGE_TAG .
+      - docker tag $ECR_REPOSITORY:$IMAGE_TAG $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
+      - docker tag $ECR_REPOSITORY:$IMAGE_TAG $ECR_REGISTRY/$ECR_REPOSITORY:latest
+      
+  post_build:
+    commands:
+      - echo "📤 Pushing Docker image to ECR..."
+      - docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
+      - docker push $ECR_REGISTRY/$ECR_REPOSITORY:latest
+      
+      - echo "✅ Build completed successfully on $(date)"
+      - echo "Image: $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG"
+      
+      # Update ECS task definition with new image (if CLUSTER_NAME is provided)
+      - |
+        if [ ! -z "$CLUSTER_NAME" ] && [ ! -z "$SERVICE_NAME" ]; then
+          echo "🚢 Updating ECS service..."
+          aws ecs update-service --cluster $CLUSTER_NAME --service $SERVICE_NAME --force-new-deployment --region $AWS_DEFAULT_REGION
+          echo "✅ ECS service updated successfully"
+        else
+          echo "ℹ️ Skipping ECS update (CLUSTER_NAME or SERVICE_NAME not set)"
+        fi
+      
+      # Create image definitions file for CodePipeline
+      - echo "📝 Creating imagedefinitions.json for CodePipeline..."
+      - printf '[{"name":"letsgetcrypto-api","imageUri":"%s"}]' $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG > imagedefinitions.json
+      
+artifacts:
+  files:
+    - imagedefinitions.json
+    - aws/cloudformation-template.yaml
+    - aws/ecs-task-definition.json
+
+cache:
+  paths:
+    - '/root/.cache/pip/**/*'

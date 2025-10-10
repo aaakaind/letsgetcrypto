@@ -17,13 +17,19 @@ Including another URLconf
 from django.contrib import admin
 from django.urls import path, include
 from django.http import JsonResponse
+from django.shortcuts import redirect
 
 def root_view(request):
-    """Root endpoint with API information"""
+    """Redirect root to dashboard"""
+    return redirect('/api/dashboard/')
+
+def api_info(request):
+    """API information endpoint"""
     return JsonResponse({
         'message': 'LetsGetCrypto API',
         'version': '1.0.0',
         'endpoints': {
+            'dashboard': '/api/dashboard/',
             'health': '/api/health/',
             'market_overview': '/api/market/',
             'crypto_price': '/api/price/{symbol}/',
@@ -35,6 +41,7 @@ def root_view(request):
 
 urlpatterns = [
     path('', root_view, name='root'),
+    path('info/', api_info, name='api_info'),
     path('admin/', admin.site.urls),
     path('api/', include('crypto_api.urls')),
 ]

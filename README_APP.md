@@ -27,6 +27,7 @@ This is a comprehensive cryptocurrency trading and prediction tool that combines
 - **XGBoost**: Gradient boosting for classification (GPU when available)
 - **Logistic Regression**: Baseline linear model
 - **Ensemble Method**: Weighted combination of all models for final signals
+- **Feedback Loop**: Automated continuous learning with tiered training system (NEW!)
 
 ### 🧠 AI-Powered Analysis (Claude Opus 4.1)
 - **Market Analysis**: Comprehensive analysis of market conditions and trends
@@ -78,12 +79,14 @@ python main.py
 1. **Select Cryptocurrency**: Choose from Bitcoin, Ethereum, etc.
 2. **Fetch Data**: Click "Refresh Data" to get latest market information
 3. **Train Models**: Click "Train Models" to prepare ML predictions
-4. **Get Predictions**: Generate buy/sell/hold signals
-5. **Set Up Trading** (Optional):
+4. **Enable Feedback Loop** (NEW!): Check "Enable Automatic Feedback Loop" for continuous learning
+5. **Get Predictions**: Generate buy/sell/hold signals
+6. **Set Up Trading** (Optional):
    - Enter Binance API credentials
    - Enable testnet mode for safety
    - Configure risk parameters
-6. **Monitor Performance**: Track trades and portfolio metrics
+7. **Monitor Performance**: Track trades and portfolio metrics
+8. **View Feedback Status** (NEW!): Click "Show Feedback Status" to see learning progress
 
 ### API Configuration
 

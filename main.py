@@ -348,6 +348,8 @@ class MLModels:
         self.models = {}
         self.scalers = {}
         self.feature_columns = []
+        self.performance_history = []  # Track model performance over time
+        self.model_versions = {}  # Track different model versions
         
     def prepare_features(self, df: pd.DataFrame) -> Tuple[np.ndarray, np.ndarray]:
         """
@@ -619,6 +621,360 @@ class MLModels:
         except Exception as e:
             logger.error(f"Error getting ensemble prediction: {e}")
             return {'signal': 'HOLD', 'ensemble': 0.5}
+    
+    def save_performance_metrics(self, model_name: str, metrics: Dict[str, float]) -> None:
+        """
+        Save performance metrics for a trained model
+        
+        Args:
+            model_name: Name of the model
+            metrics: Dictionary of performance metrics
+        """
+        try:
+            performance_record = {
+                'timestamp': datetime.now(),
+                'model_name': model_name,
+                'metrics': metrics
+            }
+            self.performance_history.append(performance_record)
+            logger.info(f"Saved performance metrics for {model_name}")
+        except Exception as e:
+            logger.error(f"Error saving performance metrics: {e}")
+    
+    def get_performance_trend(self, model_name: str, window: int = 5) -> Dict[str, Any]:
+        """
+        Get performance trend for a specific model
+        
+        Args:
+            model_name: Name of the model
+            window: Number of recent records to analyze
+            
+        Returns:
+            Dictionary with trend analysis
+        """
+        try:
+            # Filter records for this model
+            model_records = [r for r in self.performance_history if r['model_name'] == model_name]
+            
+            if len(model_records) < 2:
+                return {'trend': 'insufficient_data', 'improvement': 0.0}
+            
+            # Get recent records
+            recent_records = model_records[-window:]
+            
+            # Calculate trend
+            accuracies = [r['metrics'].get('accuracy', 0) for r in recent_records]
+            if len(accuracies) >= 2:
+                trend = 'improving' if accuracies[-1] > accuracies[0] else 'degrading'
+                improvement = accuracies[-1] - accuracies[0]
+            else:
+                trend = 'stable'
+                improvement = 0.0
+            
+            return {
+                'trend': trend,
+                'improvement': improvement,
+                'recent_accuracy': accuracies[-1] if accuracies else 0.0,
+                'avg_accuracy': np.mean(accuracies) if accuracies else 0.0
+            }
+        except Exception as e:
+            logger.error(f"Error calculating performance trend: {e}")
+            return {'trend': 'error', 'improvement': 0.0}
+
+class FeedbackLoop:
+    """
+    Automated feedback loop for continuous model training and improvement.
+    Implements a tiered training system with automatic retraining triggers.
+    """
+    
+    def __init__(self, ml_models: MLModels, data_fetcher: DataFetcher):
+        self.ml_models = ml_models
+        self.data_fetcher = data_fetcher
+        self.config = {
+            'tier1_interval': 3600,  # Tier 1: Basic - retrain every hour
+            'tier2_interval': 21600,  # Tier 2: Intermediate - retrain every 6 hours
+            'tier3_interval': 86400,  # Tier 3: Advanced - retrain daily
+            'performance_threshold': 0.55,  # Minimum acceptable accuracy
+            'improvement_threshold': 0.02,  # Minimum improvement to consider
+            'evaluation_window': 10,  # Number of predictions to evaluate
+        }
+        self.prediction_log = []  # Log of predictions vs actual outcomes
+        self.last_training = {
+            'tier1': None,
+            'tier2': None,
+            'tier3': None
+        }
+        self.training_in_progress = False
+    
+    def log_prediction_outcome(self, prediction: Dict[str, Any], actual_outcome: str) -> None:
+        """
+        Log a prediction and its actual outcome for learning
+        
+        Args:
+            prediction: Dictionary containing prediction details
+            actual_outcome: Actual market outcome ('up', 'down', 'stable')
+        """
+        try:
+            outcome_record = {
+                'timestamp': datetime.now(),
+                'prediction': prediction,
+                'actual': actual_outcome,
+                'correct': prediction.get('signal', 'HOLD') == actual_outcome
+            }
+            self.prediction_log.append(outcome_record)
+            
+            # Keep only recent records to prevent memory bloat
+            if len(self.prediction_log) > 1000:
+                self.prediction_log = self.prediction_log[-1000:]
+            
+            logger.info(f"Logged prediction outcome: {actual_outcome}")
+        except Exception as e:
+            logger.error(f"Error logging prediction outcome: {e}")
+    
+    def calculate_recent_performance(self) -> Dict[str, float]:
+        """
+        Calculate recent prediction performance
+        
+        Returns:
+            Dictionary with performance metrics
+        """
+        try:
+            if len(self.prediction_log) < self.config['evaluation_window']:
+                return {'accuracy': 0.0, 'total_predictions': len(self.prediction_log)}
+            
+            # Get recent predictions
+            recent = self.prediction_log[-self.config['evaluation_window']:]
+            
+            # Calculate accuracy
+            correct = sum(1 for r in recent if r['correct'])
+            accuracy = correct / len(recent)
+            
+            return {
+                'accuracy': accuracy,
+                'total_predictions': len(recent),
+                'correct_predictions': correct
+            }
+        except Exception as e:
+            logger.error(f"Error calculating recent performance: {e}")
+            return {'accuracy': 0.0, 'total_predictions': 0}
+    
+    def should_retrain(self, tier: str) -> bool:
+        """
+        Determine if models should be retrained for a given tier
+        
+        Args:
+            tier: Training tier ('tier1', 'tier2', 'tier3')
+            
+        Returns:
+            True if retraining should occur, False otherwise
+        """
+        try:
+            # Check if training is already in progress
+            if self.training_in_progress:
+                return False
+            
+            # Check time-based trigger
+            interval = self.config[f'{tier}_interval']
+            last_train = self.last_training[tier]
+            
+            if last_train is None:
+                return True
+            
+            time_since_training = (datetime.now() - last_train).total_seconds()
+            time_trigger = time_since_training >= interval
+            
+            # Check performance-based trigger
+            performance = self.calculate_recent_performance()
+            performance_trigger = (
+                performance['accuracy'] < self.config['performance_threshold'] and
+                performance['total_predictions'] >= self.config['evaluation_window']
+            )
+            
+            return time_trigger or performance_trigger
+        except Exception as e:
+            logger.error(f"Error checking retrain condition: {e}")
+            return False
+    
+    def tier1_training(self, df: pd.DataFrame) -> Dict[str, float]:
+        """
+        Tier 1: Basic fast training with logistic regression
+        
+        Args:
+            df: Training data
+            
+        Returns:
+            Dictionary with training results
+        """
+        try:
+            logger.info("Starting Tier 1 (Basic) training...")
+            
+            X, y = self.ml_models.prepare_features(df)
+            lr_accuracy = self.ml_models.train_logistic_regression(X, y)
+            
+            self.ml_models.save_performance_metrics('logistic', {'accuracy': lr_accuracy})
+            self.last_training['tier1'] = datetime.now()
+            
+            logger.success(f"Tier 1 training complete: accuracy={lr_accuracy:.4f}")
+            return {'tier': 'tier1', 'logistic_accuracy': lr_accuracy}
+        except Exception as e:
+            logger.error(f"Error in Tier 1 training: {e}")
+            return {'tier': 'tier1', 'error': str(e)}
+    
+    def tier2_training(self, df: pd.DataFrame) -> Dict[str, float]:
+        """
+        Tier 2: Intermediate training with XGBoost
+        
+        Args:
+            df: Training data
+            
+        Returns:
+            Dictionary with training results
+        """
+        try:
+            logger.info("Starting Tier 2 (Intermediate) training...")
+            
+            X, y = self.ml_models.prepare_features(df)
+            lr_accuracy = self.ml_models.train_logistic_regression(X, y)
+            xgb_accuracy = self.ml_models.train_xgboost(X, y)
+            
+            self.ml_models.save_performance_metrics('logistic', {'accuracy': lr_accuracy})
+            self.ml_models.save_performance_metrics('xgboost', {'accuracy': xgb_accuracy})
+            self.last_training['tier2'] = datetime.now()
+            
+            logger.success(f"Tier 2 training complete: LR={lr_accuracy:.4f}, XGB={xgb_accuracy:.4f}")
+            return {
+                'tier': 'tier2',
+                'logistic_accuracy': lr_accuracy,
+                'xgboost_accuracy': xgb_accuracy
+            }
+        except Exception as e:
+            logger.error(f"Error in Tier 2 training: {e}")
+            return {'tier': 'tier2', 'error': str(e)}
+    
+    def tier3_training(self, df: pd.DataFrame) -> Dict[str, float]:
+        """
+        Tier 3: Advanced training with all models including LSTM
+        
+        Args:
+            df: Training data
+            
+        Returns:
+            Dictionary with training results
+        """
+        try:
+            logger.info("Starting Tier 3 (Advanced) training...")
+            
+            X, y = self.ml_models.prepare_features(df)
+            lr_accuracy = self.ml_models.train_logistic_regression(X, y)
+            xgb_accuracy = self.ml_models.train_xgboost(X, y)
+            lstm_accuracy = self.ml_models.train_lstm(df)
+            
+            self.ml_models.save_performance_metrics('logistic', {'accuracy': lr_accuracy})
+            self.ml_models.save_performance_metrics('xgboost', {'accuracy': xgb_accuracy})
+            self.ml_models.save_performance_metrics('lstm', {'accuracy': lstm_accuracy})
+            self.last_training['tier3'] = datetime.now()
+            
+            logger.success(
+                f"Tier 3 training complete: LR={lr_accuracy:.4f}, "
+                f"XGB={xgb_accuracy:.4f}, LSTM={lstm_accuracy:.4f}"
+            )
+            return {
+                'tier': 'tier3',
+                'logistic_accuracy': lr_accuracy,
+                'xgboost_accuracy': xgb_accuracy,
+                'lstm_accuracy': lstm_accuracy
+            }
+        except Exception as e:
+            logger.error(f"Error in Tier 3 training: {e}")
+            return {'tier': 'tier3', 'error': str(e)}
+    
+    def execute_training_cycle(self, symbol: str = 'bitcoin', days: int = 30) -> Dict[str, Any]:
+        """
+        Execute a complete training cycle based on tiered system
+        
+        Args:
+            symbol: Cryptocurrency symbol to train on
+            days: Number of days of historical data
+            
+        Returns:
+            Dictionary with training cycle results
+        """
+        try:
+            if self.training_in_progress:
+                logger.warning("Training already in progress, skipping cycle")
+                return {'status': 'skipped', 'reason': 'training_in_progress'}
+            
+            self.training_in_progress = True
+            logger.info(f"Starting training cycle for {symbol}")
+            
+            # Fetch fresh data
+            df = self.data_fetcher.fetch_historical_data(symbol, days)
+            if df is None or df.empty:
+                logger.error("Failed to fetch training data")
+                self.training_in_progress = False
+                return {'status': 'error', 'reason': 'no_data'}
+            
+            # Add technical indicators
+            indicators = TechnicalIndicators()
+            df = indicators.add_all_indicators(df)
+            
+            results = {}
+            
+            # Check and execute each tier
+            if self.should_retrain('tier1'):
+                results['tier1'] = self.tier1_training(df)
+            
+            if self.should_retrain('tier2'):
+                results['tier2'] = self.tier2_training(df)
+            
+            if self.should_retrain('tier3'):
+                results['tier3'] = self.tier3_training(df)
+            
+            self.training_in_progress = False
+            
+            if not results:
+                logger.info("No retraining needed at this time")
+                return {'status': 'no_action', 'reason': 'thresholds_not_met'}
+            
+            logger.success(f"Training cycle complete: {len(results)} tier(s) trained")
+            return {'status': 'success', 'results': results}
+            
+        except Exception as e:
+            self.training_in_progress = False
+            logger.error(f"Error in training cycle: {e}")
+            return {'status': 'error', 'error': str(e)}
+    
+    def get_feedback_loop_status(self) -> Dict[str, Any]:
+        """
+        Get current status of the feedback loop system
+        
+        Returns:
+            Dictionary with status information
+        """
+        try:
+            recent_perf = self.calculate_recent_performance()
+            
+            status = {
+                'training_in_progress': self.training_in_progress,
+                'recent_performance': recent_perf,
+                'prediction_log_size': len(self.prediction_log),
+                'last_training': {
+                    tier: (self.last_training[tier].isoformat() if self.last_training[tier] else None)
+                    for tier in ['tier1', 'tier2', 'tier3']
+                },
+                'config': self.config,
+                'model_performance_trends': {}
+            }
+            
+            # Add performance trends for each model
+            for model_name in ['logistic', 'xgboost', 'lstm']:
+                trend = self.ml_models.get_performance_trend(model_name)
+                status['model_performance_trends'][model_name] = trend
+            
+            return status
+        except Exception as e:
+            logger.error(f"Error getting feedback loop status: {e}")
+            return {'error': str(e)}
 
 class CryptoWallet:
     """Cryptocurrency wallet functionality for Bitcoin and Ethereum testnet"""
@@ -1023,6 +1379,7 @@ class CryptoPredictionApp(QMainWindow):
         self.ml_models = MLModels()
         self.wallet = CryptoWallet()
         self.trading_engine = TradingEngine()
+        self.feedback_loop = FeedbackLoop(self.ml_models, self.data_fetcher)
         
         # Initialize Claude analyzer if available
         self.claude_analyzer = None
@@ -1112,6 +1469,23 @@ class CryptoPredictionApp(QMainWindow):
         ml_layout.addWidget(self.predict_button)
         
         layout.addWidget(ml_group)
+        
+        # Feedback Loop Controls
+        feedback_group = QGroupBox("Feedback Loop (Auto-Learning)")
+        feedback_layout = QVBoxLayout(feedback_group)
+        
+        self.enable_feedback_loop = QCheckBox("Enable Automatic Feedback Loop")
+        feedback_layout.addWidget(self.enable_feedback_loop)
+        
+        self.run_feedback_cycle_button = QPushButton("Run Training Cycle")
+        self.run_feedback_cycle_button.clicked.connect(self.run_feedback_loop_cycle)
+        feedback_layout.addWidget(self.run_feedback_cycle_button)
+        
+        self.feedback_status_button = QPushButton("Show Feedback Status")
+        self.feedback_status_button.clicked.connect(self.show_feedback_loop_status)
+        feedback_layout.addWidget(self.feedback_status_button)
+        
+        layout.addWidget(feedback_group)
         
         # Trading controls
         trading_group = QGroupBox("Trading Controls")
@@ -1228,6 +1602,17 @@ class CryptoPredictionApp(QMainWindow):
         self.status_timer = QTimer()
         self.status_timer.timeout.connect(self.update_status)
         self.status_timer.start(10000)  # 10 seconds
+        
+        # Feedback loop timer (every 1 hour for Tier 1 checks)
+        self.feedback_timer = QTimer()
+        self.feedback_timer.timeout.connect(self.auto_feedback_loop)
+        self.feedback_timer.start(3600000)  # 1 hour
+    
+    def auto_feedback_loop(self):
+        """Automatically run feedback loop if enabled"""
+        if self.enable_feedback_loop.isChecked():
+            self.log_text.append(f"[{datetime.now().strftime('%H:%M:%S')}] Auto feedback loop triggered")
+            self.run_feedback_loop_cycle()
     
     def show_risk_disclosure(self):
         """Show risk disclosure dialog"""
@@ -1348,6 +1733,11 @@ class CryptoPredictionApp(QMainWindow):
             xgb_accuracy = self.ml_models.train_xgboost(X, y)
             lstm_accuracy = self.ml_models.train_lstm(self.current_data)
             
+            # Save performance metrics for feedback loop
+            self.ml_models.save_performance_metrics('logistic', {'accuracy': lr_accuracy})
+            self.ml_models.save_performance_metrics('xgboost', {'accuracy': xgb_accuracy})
+            self.ml_models.save_performance_metrics('lstm', {'accuracy': lstm_accuracy})
+            
             self.status_label.setText("Models trained successfully")
             self.log_text.append(
                 f"[{datetime.now().strftime('%H:%M:%S')}] Training complete - "
@@ -1357,6 +1747,74 @@ class CryptoPredictionApp(QMainWindow):
         except Exception as e:
             self.status_label.setText(f"Training error: {str(e)}")
             self.log_text.append(f"[{datetime.now().strftime('%H:%M:%S')}] Training error: {str(e)}")
+    
+    def run_feedback_loop_cycle(self):
+        """Execute a feedback loop training cycle"""
+        try:
+            self.status_label.setText("Running feedback loop training cycle...")
+            self.log_text.append(f"[{datetime.now().strftime('%H:%M:%S')}] Starting feedback loop cycle...")
+            
+            # Get current coin selection
+            coin = self.coin_combo.currentText()
+            days = self.days_spinbox.value()
+            
+            # Execute training cycle
+            result = self.feedback_loop.execute_training_cycle(coin, days)
+            
+            if result['status'] == 'success':
+                self.log_text.append(
+                    f"[{datetime.now().strftime('%H:%M:%S')}] Feedback loop cycle complete: "
+                    f"{len(result.get('results', {}))} tier(s) trained"
+                )
+                self.status_label.setText("Feedback loop cycle complete")
+            elif result['status'] == 'no_action':
+                self.log_text.append(
+                    f"[{datetime.now().strftime('%H:%M:%S')}] No retraining needed: "
+                    f"{result.get('reason', 'thresholds not met')}"
+                )
+                self.status_label.setText("No retraining needed")
+            else:
+                self.log_text.append(
+                    f"[{datetime.now().strftime('%H:%M:%S')}] Feedback loop error: "
+                    f"{result.get('reason', result.get('error', 'unknown'))}"
+                )
+                self.status_label.setText("Feedback loop error")
+                
+        except Exception as e:
+            self.status_label.setText(f"Feedback loop error: {str(e)}")
+            self.log_text.append(f"[{datetime.now().strftime('%H:%M:%S')}] Feedback loop error: {str(e)}")
+    
+    def show_feedback_loop_status(self):
+        """Display feedback loop status"""
+        try:
+            status = self.feedback_loop.get_feedback_loop_status()
+            
+            status_text = "=== Feedback Loop Status ===\n\n"
+            status_text += f"Training in progress: {status.get('training_in_progress', False)}\n"
+            status_text += f"Prediction log size: {status.get('prediction_log_size', 0)}\n\n"
+            
+            # Recent performance
+            perf = status.get('recent_performance', {})
+            status_text += f"Recent Performance:\n"
+            status_text += f"  Accuracy: {perf.get('accuracy', 0):.3f}\n"
+            status_text += f"  Total predictions: {perf.get('total_predictions', 0)}\n"
+            status_text += f"  Correct: {perf.get('correct_predictions', 0)}\n\n"
+            
+            # Last training times
+            status_text += "Last Training Times:\n"
+            for tier, time in status.get('last_training', {}).items():
+                time_str = time if time else "Never"
+                status_text += f"  {tier}: {time_str}\n"
+            
+            status_text += "\nModel Performance Trends:\n"
+            for model, trend in status.get('model_performance_trends', {}).items():
+                status_text += f"  {model}: {trend.get('trend', 'unknown')} "
+                status_text += f"(improvement: {trend.get('improvement', 0):.4f})\n"
+            
+            self.predictions_text.setText(status_text)
+            
+        except Exception as e:
+            self.log_text.append(f"[{datetime.now().strftime('%H:%M:%S')}] Error displaying status: {str(e)}")
     
     def get_predictions(self):
         """Get ML predictions and trading signals"""
