@@ -14,6 +14,339 @@ The AWS deployment includes:
 - **Amazon VPC**: Isolated network with public and private subnets
 - **Amazon ECR**: Container image registry
 
+## 🔄 CI/CD Pipeline (Automated Deployments)
+
+LetsGetCrypto includes a fully automated CI/CD pipeline using AWS CodeBuild and CodePipeline. This enables continuous delivery with automated builds and deployments triggered by Git commits.
+
+### CI/CD Architecture
+
+The CI/CD pipeline includes:
+
+- **AWS CodePipeline**: Orchestrates the complete deployment workflow
+- **AWS CodeBuild**: Builds Docker images and runs tests
+- **Amazon ECR**: Stores versioned container images
+- **GitHub Webhook**: Automatically triggers pipeline on code changes
+- **Amazon ECS**: Automatic deployment of new versions to your cluster
+- **Amazon S3**: Stores build artifacts and pipeline data
+- **AWS CloudWatch**: Logs all build and deployment activities
+
+### Quick Setup
+
+Set up the complete CI/CD pipeline with a single command:
+
+```bash
+# Make the setup script executable
+chmod +x setup-cicd.sh
+
+# Run the setup (you'll be prompted for GitHub token)
+./setup-cicd.sh
+```
+
+**What the script does:**
+1. ✅ Creates an S3 bucket for pipeline artifacts
+2. ✅ Sets up IAM roles with appropriate permissions
+3. ✅ Creates a CodeBuild project for building Docker images
+4. ✅ Creates a CodePipeline with Source → Build → Deploy stages
+5. ✅ Configures GitHub webhook for automatic triggers
+6. ✅ Optionally connects to your ECS cluster for automated deployments
+
+**Setup time:** Approximately 2-3 minutes
+
+### Manual CI/CD Setup
+
+If you prefer manual setup or need customization:
+
+#### 1. Create GitHub Personal Access Token
+
+1. Go to [GitHub Settings → Developer settings → Personal access tokens](https://github.com/settings/tokens)
+2. Click "Generate new token (classic)"
+3. Select scopes: `repo` and `admin:repo_hook`
+4. Copy the generated token
+
+#### 2. Deploy CI/CD Infrastructure
+
+```bash
+# Set environment variables
+export GITHUB_TOKEN="your_github_token_here"
+export AWS_REGION="us-east-1"
+
+# Optional: Connect to existing ECS cluster
+export ECS_CLUSTER_NAME="letsgetcrypto-cluster"
+export ECS_SERVICE_NAME="letsgetcrypto-service"
+
+# Deploy the CI/CD stack
+aws cloudformation deploy \
+    --template-file aws/codebuild-pipeline.yaml \
+    --stack-name letsgetcrypto-cicd \
+    --parameter-overrides \
+        GitHubRepository=aaakaind/letsgetcrypto \
+        GitHubBranch=main \
+        GitHubToken=$GITHUB_TOKEN \
+        ECSClusterName=$ECS_CLUSTER_NAME \
+        ECSServiceName=$ECS_SERVICE_NAME \
+    --capabilities CAPABILITY_NAMED_IAM \
+    --region $AWS_REGION
+```
+
+#### 3. Monitor Pipeline
+
+```bash
+# Get pipeline name
+PIPELINE_NAME=$(aws cloudformation describe-stacks \
+    --stack-name letsgetcrypto-cicd \
+    --query 'Stacks[0].Outputs[?OutputKey==`PipelineName`].OutputValue' \
+    --output text)
+
+# View pipeline status
+aws codepipeline get-pipeline-state --name $PIPELINE_NAME
+
+# Manually trigger pipeline
+aws codepipeline start-pipeline-execution --name $PIPELINE_NAME
+```
+
+### How It Works
+
+1. **Developer pushes code** to the `main` branch (or configured branch)
+2. **GitHub webhook** notifies CodePipeline
+3. **Pipeline triggers** and enters Source stage
+4. **CodeBuild starts** with the `buildspec.yml` configuration:
+   - Installs dependencies
+   - Runs tests (optional)
+   - Builds Docker image
+   - Pushes image to ECR with commit SHA tag
+5. **Deploy stage** (if ECS is configured):
+   - Updates ECS service with new image
+   - Performs rolling deployment
+   - Monitors health checks
+6. **Notifications** are sent via CloudWatch logs
+
+### Build Configuration
+
+The build process is defined in `buildspec.yml`:
+
+```yaml
+# Key features:
+- Automated Docker image builds
+- ECR authentication and push
+- Optional test execution
+- ECS service updates
+- Build caching for faster builds
+- CloudWatch logging
+```
+
+#### Customizing the Build
+
+Edit `buildspec.yml` to customize:
+
+- **Enable tests**: Uncomment the test commands in the `pre_build` phase
+- **Add linting**: Add linting tools in `pre_build`
+- **Multi-stage builds**: Modify build commands for optimization
+- **Environment variables**: Add to CodeBuild project configuration
+
+### Environment Variables
+
+Set these in the CodeBuild project (via CloudFormation or Console):
+
+| Variable | Description | Default |
+|----------|-------------|---------|
+| `AWS_DEFAULT_REGION` | AWS region for deployment | `us-east-1` |
+| `ECR_REPOSITORY` | ECR repository name | `letsgetcrypto` |
+| `CLUSTER_NAME` | ECS cluster for deployment | (optional) |
+| `SERVICE_NAME` | ECS service to update | (optional) |
+
+### Monitoring and Logs
+
+**View build logs:**
+```bash
+# Real-time logs
+aws logs tail /aws/codebuild/letsgetcrypto-cicd --follow
+
+# Recent logs
+aws logs tail /aws/codebuild/letsgetcrypto-cicd --since 1h
+```
+
+**Check pipeline status:**
+```bash
+# Pipeline execution history
+aws codepipeline list-pipeline-executions --pipeline-name letsgetcrypto-cicd-pipeline
+
+# Latest execution details
+aws codepipeline get-pipeline-execution \
+    --pipeline-name letsgetcrypto-cicd-pipeline \
+    --pipeline-execution-id <execution-id>
+```
+
+**AWS Console:**
+- CodePipeline: https://console.aws.amazon.com/codesuite/codepipeline/pipelines
+- CodeBuild: https://console.aws.amazon.com/codesuite/codebuild/projects
+- CloudWatch Logs: https://console.aws.amazon.com/cloudwatch/home#logsV2:log-groups
+
+### Costs
+
+Approximate monthly costs for CI/CD infrastructure:
+
+| Service | Usage | Cost |
+|---------|-------|------|
+| CodeBuild | 100 builds @ 5 min each | ~$1.00 |
+| CodePipeline | 1 active pipeline | $1.00 |
+| S3 (artifacts) | ~5 GB storage | $0.12 |
+| CloudWatch Logs | ~1 GB logs | $0.50 |
+| **Total** | | **~$3/month** |
+
+*Note: Actual costs may vary based on usage patterns*
+
+### Troubleshooting CI/CD
+
+#### Build Fails with "Access Denied"
+
+**Issue**: CodeBuild can't access ECR or ECS
+
+**Solution**: Verify IAM role permissions:
+```bash
+aws iam get-role-policy \
+    --role-name letsgetcrypto-cicd-codebuild-role \
+    --policy-name CodeBuildPolicy
+```
+
+#### Pipeline Not Triggering on Push
+
+**Issue**: GitHub webhook not working
+
+**Solution**: 
+1. Check webhook in GitHub repository settings
+2. Verify GitHub token has `admin:repo_hook` scope
+3. Re-create webhook:
+```bash
+aws cloudformation update-stack \
+    --stack-name letsgetcrypto-cicd \
+    --use-previous-template \
+    --parameters ParameterKey=GitHubToken,ParameterValue=<new-token> \
+    --capabilities CAPABILITY_NAMED_IAM
+```
+
+#### Docker Build Fails
+
+**Issue**: Out of memory or timeout
+
+**Solution**: Increase CodeBuild compute size:
+- Edit `aws/codebuild-pipeline.yaml`
+- Change `ComputeType` from `BUILD_GENERAL1_SMALL` to `BUILD_GENERAL1_MEDIUM`
+- Redeploy stack
+
+### Cleanup CI/CD Resources
+
+To remove the CI/CD pipeline:
+
+```bash
+# Get artifact bucket name
+BUCKET=$(aws cloudformation describe-stacks \
+    --stack-name letsgetcrypto-cicd \
+    --query 'Stacks[0].Outputs[?OutputKey==`ArtifactBucketName`].OutputValue' \
+    --output text)
+
+# Empty and delete bucket
+aws s3 rm s3://$BUCKET --recursive
+aws s3 rb s3://$BUCKET
+
+# Delete CloudFormation stack
+aws cloudformation delete-stack --stack-name letsgetcrypto-cicd
+```
+
+## 📦 Deployment Packages
+
+LetsGetCrypto provides ready-to-deploy packages for different AWS services. Choose the package that best fits your needs:
+
+### Creating Deployment Packages
+
+Run the packaging script to create deployment-ready packages:
+
+```bash
+# Make the script executable
+chmod +x package-for-aws.sh
+
+# Create packages (optionally specify version)
+./package-for-aws.sh 1.0.0
+```
+
+This creates three packages in the `aws-packages/` directory:
+
+1. **CloudFormation/ECS Fargate Package** (Recommended for production)
+   - Best for: Scalable production deployments
+   - Cost: ~$50-100/month
+   - Features: Auto-scaling, load balancer, managed database
+   
+2. **Elastic Beanstalk Package** (Easiest deployment)
+   - Best for: Quick deployments and testing
+   - Cost: ~$30-50/month
+   - Features: Simple management, automatic updates, lower cost
+
+3. **Complete Source Package**
+   - Best for: Custom deployments or development
+   - Contains all source code and configuration
+
+See `aws-packages/PACKAGE_SUMMARY.md` for detailed information on each package.
+
+### Option 1: Elastic Beanstalk (Easiest) 🚀
+
+**Perfect for**: Quick deployments, testing, small-scale applications
+
+#### Via AWS Console (No Command Line Required)
+
+1. Extract the Elastic Beanstalk package:
+   ```bash
+   unzip aws-packages/letsgetcrypto-beanstalk-*.zip
+   ```
+
+2. Go to [AWS Elastic Beanstalk Console](https://console.aws.amazon.com/elasticbeanstalk)
+
+3. Click **Create Application**
+
+4. Configure:
+   - Application name: `letsgetcrypto`
+   - Platform: Python 3.11
+   - Upload the ZIP file created above
+
+5. Configure environment variables:
+   - `DJANGO_DEBUG=False`
+   - `DJANGO_ALLOWED_HOSTS=*`
+   - `DJANGO_SECRET_KEY=<generate-random-key>`
+
+6. Click **Create Environment**
+
+7. Wait 5-10 minutes for deployment
+
+8. Access your application at the provided URL!
+
+#### Via CLI
+
+```bash
+# Install EB CLI if not already installed
+pip install awsebcli
+
+# Extract and enter the package directory
+unzip aws-packages/letsgetcrypto-beanstalk-*.zip -d letsgetcrypto-eb
+cd letsgetcrypto-eb
+
+# Initialize Elastic Beanstalk
+eb init -p python-3.11 letsgetcrypto --region us-east-1
+
+# Create environment with database
+eb create letsgetcrypto-env \
+  --database.engine postgres \
+  --database.instance db.t3.micro \
+  --instance-type t3.small \
+  --envvars DJANGO_DEBUG=False,DJANGO_ALLOWED_HOSTS=*
+
+# Open in browser
+eb open
+```
+
+**Deployment time:** 5-10 minutes
+
+### Option 2: CloudFormation/ECS Fargate (Production)
+
+**Perfect for**: Production deployments requiring scalability
+
 ## 🚀 Quick Deployment
 
 ### Prerequisites

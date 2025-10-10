@@ -1,0 +1,318 @@
+# GitHub Pages Deployment Guide
+
+This guide explains how to deploy the LetsGetCrypto dashboard to GitHub Pages.
+
+## Overview
+
+The LetsGetCrypto dashboard can be deployed as a static website on GitHub Pages. The static version uses direct CoinGecko API calls for cryptocurrency data and provides a demo mode for ML training and trading features.
+
+## Quick Setup
+
+### 1. Enable GitHub Pages
+
+1. Go to your repository on GitHub
+2. Navigate to **Settings** → **Pages**
+3. Under "Build and deployment":
+   - **Source**: Select "GitHub Actions"
+4. The deployment workflow will automatically run on the next push to `main`
+
+### 2. Access Your Dashboard
+
+Once deployed, your dashboard will be available at:
+```
+https://[your-username].github.io/letsgetcrypto/
+```
+
+Replace `[your-username]` with your GitHub username.
+
+## Deployment Details
+
+### Automatic Deployment
+
+The dashboard automatically deploys to GitHub Pages when:
+- Changes are pushed to the `main` branch
+- The workflow is manually triggered from the Actions tab
+
+The deployment workflow is defined in `.github/workflows/deploy-pages.yml`.
+
+### Manual Deployment
+
+To manually trigger a deployment:
+
+1. Go to the **Actions** tab in your GitHub repository
+2. Select "Deploy to GitHub Pages" workflow
+3. Click "Run workflow"
+4. Select the `main` branch and click "Run workflow"
+
+## File Structure
+
+The static GitHub Pages version is located in the `docs/` directory:
+
+```
+docs/
+├── index.html          # Main dashboard HTML
+├── css/
+│   └── dashboard.css   # Styling
+├── js/
+│   └── dashboard.js    # JavaScript with CoinGecko API integration
+├── .nojekyll           # Bypasses Jekyll processing
+└── README.md           # Documentation for the static version
+```
+
+## Features
+
+### Available Features ✅
+
+- **Real-time Market Data**: Live cryptocurrency prices from CoinGecko
+- **Interactive Charts**: Price history and technical indicators
+- **Market Overview**: Top cryptocurrencies by market cap
+- **Auto-refresh**: Data updates every 30 seconds
+- **Responsive Design**: Works on mobile and desktop
+
+### Demo Mode Features ⚠️
+
+The following features are simulated in the GitHub Pages version:
+
+- **ML Model Training**: Shows simulated training progress
+- **Predictions**: Generates demo trading signals
+- **Trading**: Displays simulated trade execution
+
+## API Configuration
+
+### CoinGecko API
+
+The GitHub Pages version uses the free CoinGecko API with these limits:
+
+- **Rate Limit**: 10-30 calls per minute
+- **No API Key Required**: Uses public endpoints
+- **Data Coverage**: Comprehensive cryptocurrency data
+
+If you encounter rate limits, consider:
+- Reducing auto-refresh frequency
+- Waiting before retrying failed requests
+- Getting a CoinGecko API key (optional)
+
+### Using Your Own API Key (Optional)
+
+To use your own CoinGecko API key:
+
+1. Get an API key from [CoinGecko](https://www.coingecko.com/en/api/pricing)
+2. Edit `docs/js/dashboard.js`
+3. Add your API key to the AJAX calls:
+
+```javascript
+$.ajax({
+    url: 'https://api.coingecko.com/api/v3/coins/markets',
+    headers: {
+        'x-cg-demo-api-key': 'YOUR_API_KEY_HERE'
+    },
+    // ... rest of the configuration
+});
+```
+
+## Customization
+
+### Changing Cryptocurrencies
+
+To modify the available cryptocurrencies:
+
+1. Edit `docs/index.html`
+2. Find the `<select id="coin-select">` element
+3. Add or remove `<option>` elements with CoinGecko coin IDs
+
+Example:
+```html
+<option value="ripple">Ripple (XRP)</option>
+<option value="polkadot">Polkadot (DOT)</option>
+```
+
+Find coin IDs at: https://www.coingecko.com/
+
+### Styling Changes
+
+All styles are in `docs/css/dashboard.css`. Common customizations:
+
+- **Color Scheme**: Modify the gradient in the `body` selector
+- **Card Colors**: Update `.stat-card` background colors
+- **Button Colors**: Change `.btn` class colors
+
+### Functionality Changes
+
+JavaScript functionality is in `docs/js/dashboard.js`:
+
+- **Refresh Interval**: Modify the `30000` (30 seconds) in `startAutoRefresh()`
+- **API Endpoints**: Update URLs in `loadMarketOverview()`, `loadCryptoPrice()`, etc.
+- **Chart Configuration**: Modify chart options in `initializeCharts()`
+
+## Testing Locally
+
+### Option 1: Python HTTP Server
+
+```bash
+cd docs
+python -m http.server 8080
+# Open: http://localhost:8080
+```
+
+### Option 2: Node.js HTTP Server
+
+```bash
+cd docs
+npx http-server -p 8080
+# Open: http://localhost:8080
+```
+
+### Option 3: PHP Server
+
+```bash
+cd docs
+php -S localhost:8080
+# Open: http://localhost:8080
+```
+
+## Troubleshooting
+
+### Dashboard Not Loading
+
+**Issue**: Page shows but no data loads
+
+**Solutions**:
+- Check browser console for errors (F12)
+- Verify internet connectivity
+- Check if CoinGecko API is accessible
+- Clear browser cache and refresh
+
+### API Rate Limit Errors
+
+**Issue**: "Error loading market data" messages
+
+**Solutions**:
+- Wait 60 seconds before retrying
+- Reduce auto-refresh frequency
+- Get a CoinGecko API key
+
+### GitHub Pages Not Deploying
+
+**Issue**: Workflow fails or pages don't update
+
+**Solutions**:
+1. Check **Actions** tab for error messages
+2. Verify GitHub Pages is enabled in repository settings
+3. Ensure source is set to "GitHub Actions"
+4. Check that `docs/` directory exists and contains files
+5. Verify workflow file syntax in `.github/workflows/deploy-pages.yml`
+
+### Charts Not Displaying
+
+**Issue**: Chart areas are empty
+
+**Solutions**:
+- Ensure Chart.js CDN is loading (check browser console)
+- Verify historical data is being fetched
+- Check `loadCryptoHistory()` function
+
+### CORS Errors
+
+**Issue**: "Cross-Origin Request Blocked" errors
+
+**Solutions**:
+- CoinGecko API supports CORS by default
+- If issues persist, try accessing from a different browser
+- Check if any browser extensions are blocking requests
+
+## Comparison: GitHub Pages vs Full Application
+
+| Feature | GitHub Pages | Full Django App |
+|---------|--------------|-----------------|
+| **Deployment** | Free, automatic | Requires hosting (AWS, Heroku, etc.) |
+| **Cost** | Free | $10-50+/month |
+| **Setup Time** | 5 minutes | 30-60 minutes |
+| **Data Sources** | CoinGecko only | Multiple APIs |
+| **ML Training** | Simulated | Real ML models (LSTM, XGBoost) |
+| **Trading** | Simulated | Testnet/Live trading |
+| **Database** | None (stateless) | PostgreSQL/SQLite |
+| **Backend API** | None | Django REST Framework |
+| **Scalability** | GitHub CDN | Depends on hosting |
+| **Custom Domain** | Supported | Supported |
+| **SSL/HTTPS** | Automatic | Requires configuration |
+
+## Advanced Configuration
+
+### Custom Domain
+
+To use a custom domain with GitHub Pages:
+
+1. Add a `CNAME` file to the `docs/` directory:
+   ```
+   crypto.yourdomain.com
+   ```
+
+2. Configure DNS with your domain registrar:
+   - Add CNAME record pointing to: `[username].github.io`
+
+3. Enable "Enforce HTTPS" in GitHub Pages settings
+
+### Analytics Integration
+
+To add Google Analytics:
+
+1. Get your Analytics tracking ID
+2. Add to `docs/index.html` before `</head>`:
+
+```html
+<!-- Google Analytics -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=GA_MEASUREMENT_ID"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+  gtag('config', 'GA_MEASUREMENT_ID');
+</script>
+```
+
+### SEO Optimization
+
+Add meta tags to `docs/index.html`:
+
+```html
+<meta name="description" content="Real-time cryptocurrency trading dashboard with ML predictions">
+<meta name="keywords" content="cryptocurrency, bitcoin, ethereum, trading, dashboard">
+<meta property="og:title" content="LetsGetCrypto Dashboard">
+<meta property="og:description" content="Real-time crypto market data and ML trading signals">
+<meta property="og:image" content="https://yourusername.github.io/letsgetcrypto/preview.png">
+```
+
+## Migration Path
+
+If you want to upgrade from GitHub Pages to the full application:
+
+1. **Keep GitHub Pages**: Use as a demo/marketing site
+2. **Deploy Full App**: Use AWS, Heroku, or other hosting
+3. **Link Between**: Add navigation to full app from GitHub Pages
+4. **Maintain Both**: Update both versions independently
+
+See [AWS_DEPLOYMENT.md](AWS_DEPLOYMENT.md) for production deployment instructions.
+
+## Support and Resources
+
+- **Main Repository**: https://github.com/aaakaind/letsgetcrypto
+- **GitHub Pages Docs**: https://docs.github.com/en/pages
+- **CoinGecko API**: https://www.coingecko.com/en/api/documentation
+- **Chart.js Docs**: https://www.chartjs.org/docs/latest/
+
+## Contributing
+
+To contribute improvements to the GitHub Pages version:
+
+1. Fork the repository
+2. Make changes in the `docs/` directory
+3. Test locally using a local HTTP server
+4. Submit a pull request
+
+## License
+
+Educational use only. See main README for full disclaimer and license information.
+
+---
+
+**⚠️ Important Disclaimer**: This dashboard is for educational purposes only. Cryptocurrency trading involves substantial risk. The predictions and signals are simulations and should not be used as financial advice. Always conduct your own research and consult with financial advisors before making investment decisions.

@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LetsGetCrypto - Trading Dashboard</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link rel="stylesheet" href="css/dashboard.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@3.9.1/dist/chart.min.js"></script>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+</head>
+<body>
+    <div class="dashboard-container">
+        <!-- Header -->
+        <header class="header">
+            <div class="header-content">
+                <div class="logo">
+                    <i class="fas fa-chart-line"></i>
+                    <h1>LetsGetCrypto</h1>
+                </div>
+                <div class="header-info">
+                    <div class="status-indicator">
+                        <span class="status-dot" id="status-dot"></span>
+                        <span id="status-text">Connecting...</span>
+                    </div>
+                    <div class="last-update">
+                        Last Update: <span id="last-update">--:--:--</span>
+                    </div>
+                </div>
+            </div>
+        </header>
+
+        <!-- Main Content -->
+        <div class="main-content">
+            <!-- Sidebar -->
+            <aside class="sidebar">
+                <div class="control-section">
+                    <h2><i class="fas fa-cogs"></i> Controls</h2>
+                    
+                    <!-- Cryptocurrency Selection -->
+                    <div class="control-group">
+                        <label for="coin-select">
+                            <i class="fas fa-coins"></i> Cryptocurrency
+                        </label>
+                        <select id="coin-select">
+                            <option value="bitcoin">Bitcoin (BTC)</option>
+                            <option value="ethereum">Ethereum (ETH)</option>
+                            <option value="binancecoin">Binance Coin (BNB)</option>
+                            <option value="cardano">Cardano (ADA)</option>
+                            <option value="solana">Solana (SOL)</option>
+                        </select>
+                    </div>
+
+                    <!-- Time Range -->
+                    <div class="control-group">
+                        <label for="days-input">
+                            <i class="fas fa-calendar"></i> Days of Data
+                        </label>
+                        <input type="number" id="days-input" value="30" min="7" max="365">
+                    </div>
+
+                    <!-- Action Buttons -->
+                    <div class="action-buttons">
+                        <button class="btn btn-primary" id="refresh-btn">
+                            <i class="fas fa-sync-alt"></i> Refresh Data
+                        </button>
+                        <button class="btn btn-success" id="train-btn">
+                            <i class="fas fa-brain"></i> Train Models
+                        </button>
+                        <button class="btn btn-info" id="predict-btn">
+                            <i class="fas fa-magic"></i> Get Predictions
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Trading Controls -->
+                <div class="control-section">
+                    <h2><i class="fas fa-exchange-alt"></i> Trading</h2>
+                    
+                    <div class="control-group">
+                        <label>
+                            <input type="checkbox" id="testnet-mode" checked>
+                            Testnet Mode (Safe)
+                        </label>
+                    </div>
+
+                    <div class="control-group">
+                        <label for="trade-amount">Trade Amount (USD)</label>
+                        <input type="number" id="trade-amount" value="100" min="10" max="10000">
+                    </div>
+
+                    <div class="action-buttons">
+                        <button class="btn btn-buy" id="buy-btn">
+                            <i class="fas fa-arrow-up"></i> Buy
+                        </button>
+                        <button class="btn btn-sell" id="sell-btn">
+                            <i class="fas fa-arrow-down"></i> Sell
+                        </button>
+                    </div>
+                </div>
+
+                <!-- System Log -->
+                <div class="control-section">
+                    <h2><i class="fas fa-terminal"></i> System Log</h2>
+                    <div id="system-log" class="system-log"></div>
+                </div>
+            </aside>
+
+            <!-- Dashboard Content -->
+            <main class="dashboard-main">
+                <!-- Market Overview Cards -->
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-icon">
+                            <i class="fas fa-dollar-sign"></i>
+                        </div>
+                        <div class="stat-content">
+                            <h3>Current Price</h3>
+                            <p class="stat-value" id="current-price">--</p>
+                            <span class="stat-change" id="price-change">--</span>
+                        </div>
+                    </div>
+
+                    <div class="stat-card">
+                        <div class="stat-icon">
+                            <i class="fas fa-chart-bar"></i>
+                        </div>
+                        <div class="stat-content">
+                            <h3>Market Cap</h3>
+                            <p class="stat-value" id="market-cap">--</p>
+                        </div>
+                    </div>
+
+                    <div class="stat-card">
+                        <div class="stat-icon">
+                            <i class="fas fa-exchange-alt"></i>
+                        </div>
+                        <div class="stat-content">
+                            <h3>24h Volume</h3>
+                            <p class="stat-value" id="volume-24h">--</p>
+                        </div>
+                    </div>
+
+                    <div class="stat-card">
+                        <div class="stat-icon">
+                            <i class="fas fa-brain"></i>
+                        </div>
+                        <div class="stat-content">
+                            <h3>ML Signal</h3>
+                            <p class="stat-value" id="ml-signal">--</p>
+                            <span class="stat-change" id="ml-confidence">--</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Charts Section -->
+                <div class="charts-section">
+                    <div class="chart-container">
+                        <h2><i class="fas fa-chart-line"></i> Price Chart</h2>
+                        <canvas id="price-chart"></canvas>
+                    </div>
+
+                    <div class="chart-container">
+                        <h2><i class="fas fa-tachometer-alt"></i> RSI Indicator</h2>
+                        <canvas id="rsi-chart"></canvas>
+                    </div>
+                </div>
+
+                <!-- Market Overview Table -->
+                <div class="table-container">
+                    <h2><i class="fas fa-list"></i> Top Cryptocurrencies</h2>
+                    <table class="market-table" id="market-table">
+                        <thead>
+                            <tr>
+                                <th>Rank</th>
+                                <th>Name</th>
+                                <th>Symbol</th>
+                                <th>Price</th>
+                                <th>24h Change</th>
+                                <th>Market Cap</th>
+                                <th>Volume</th>
+                            </tr>
+                        </thead>
+                        <tbody id="market-table-body">
+                            <tr>
+                                <td colspan="7" class="loading">Loading market data...</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- Predictions & Signals -->
+                <div class="predictions-section">
+                    <h2><i class="fas fa-robot"></i> ML Predictions & Trading Signals</h2>
+                    <div id="predictions-content" class="predictions-content">
+                        <p class="empty-state">Train models and get predictions to see signals here.</p>
+                    </div>
+                </div>
+
+                <!-- Trading History -->
+                <div class="table-container">
+                    <h2><i class="fas fa-history"></i> Trading History</h2>
+                    <table class="market-table" id="trading-table">
+                        <thead>
+                            <tr>
+                                <th>Timestamp</th>
+                                <th>Symbol</th>
+                                <th>Action</th>
+                                <th>Price</th>
+                                <th>Amount</th>
+                                <th>Status</th>
+                            </tr>
+                        </thead>
+                        <tbody id="trading-table-body">
+                            <tr>
+                                <td colspan="6" class="empty-state">No trades yet</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </main>
+        </div>
+
+        <!-- Footer -->
+        <footer class="footer">
+            <p>
+                <i class="fas fa-exclamation-triangle"></i>
+                <strong>Risk Warning:</strong> Cryptocurrency trading involves substantial risk. 
+                This tool is for educational purposes only. Always use testnet mode for practice.
+            </p>
+        </footer>
+    </div>
+
+    <script src="js/dashboard.js"></script>
+</body>
+</html>
