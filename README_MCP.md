@@ -99,6 +99,12 @@ Add the server to your MCP client configuration (e.g., Claude Desktop, VS Code):
 On macOS: `~/Library/Application Support/Claude/claude_desktop_config.json`
 On Windows: `%APPDATA%\Claude\claude_desktop_config.json`
 
+**Quick Start**: Copy the template configuration:
+```bash
+cp claude_desktop_config.json.example claude_desktop_config.json
+# Edit the file and update the paths to match your installation
+```
+
 Example configuration:
 ```json
 {
@@ -112,6 +118,8 @@ Example configuration:
   }
 }
 ```
+
+See [`claude_desktop_config.json.example`](claude_desktop_config.json.example) for a complete template.
 
 ## Example Usage with AI Assistants
 

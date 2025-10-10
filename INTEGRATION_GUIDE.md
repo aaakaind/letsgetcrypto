@@ -35,6 +35,20 @@ Edit: `%APPDATA%\Claude\claude_desktop_config.json`
 ### Linux
 Edit: `~/.config/Claude/claude_desktop_config.json`
 
+### Quick Setup
+
+A template configuration file is provided in the repository: [`claude_desktop_config.json.example`](claude_desktop_config.json.example)
+
+You can use it as a starting point:
+```bash
+# View the example
+cat claude_desktop_config.json.example
+
+# Copy to your Claude Desktop config location (example for macOS)
+cp claude_desktop_config.json.example ~/Library/Application\ Support/Claude/claude_desktop_config.json
+# Edit and update the paths to match your installation
+```
+
 ### Configuration:
 
 ```json

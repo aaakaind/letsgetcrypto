@@ -1,0 +1,14 @@
+{
+  "mcpServers": {
+    "crypto-data": {
+      "command": "python3",
+      "args": [
+        "/absolute/path/to/letsgetcrypto/crypto_mcp_server.py"
+      ],
+      "env": {
+        "PYTHONPATH": "/absolute/path/to/letsgetcrypto",
+        "CRYPTO_API_URL": "http://localhost:8000"
+      }
+    }
+  }
+}
