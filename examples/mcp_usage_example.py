@@ -6,9 +6,10 @@ This demonstrates how the tools can be called programmatically
 
 import sys
 import os
+from pathlib import Path
 
 # Add parent directory to path
-sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+sys.path.insert(0, str(Path(__file__).parent.parent))
 
 from mcp_server import (
     list_supported_coins,
