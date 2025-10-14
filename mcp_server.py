@@ -10,11 +10,16 @@ from typing import Any, Dict, List, Optional
 from mcp.server import FastMCP
 from headless_crypto_api import HeadlessCryptoAPI
 
+# Server configuration constants
+SERVER_NAME = "letsgetcrypto"
+SERVER_INSTRUCTIONS = "A cryptocurrency trading and analysis tool that provides real-time market data, technical analysis, and trading signals."
+SERVER_WEBSITE_URL = "https://github.com/aaakaind/letsgetcrypto"
+
 # Initialize FastMCP server
 mcp = FastMCP(
-    name="letsgetcrypto",
-    instructions="A cryptocurrency trading and analysis tool that provides real-time market data, technical analysis, and trading signals.",
-    website_url="https://github.com/aaakaind/letsgetcrypto"
+    name=SERVER_NAME,
+    instructions=SERVER_INSTRUCTIONS,
+    website_url=SERVER_WEBSITE_URL
 )
 
 # Initialize the crypto API
