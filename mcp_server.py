@@ -223,7 +223,7 @@ def main():
         print("  - list_supported_coins")
         print("=" * 50)
         print("Server running on http://127.0.0.1:8000")
-        mcp.run(transport="sse")
+        mcp.run(transport="http")
     else:
         # Run in stdio mode for MCP client (default)
         print("🚀 Starting LetsGetCrypto MCP Server (STDIO)", file=sys.stderr)
