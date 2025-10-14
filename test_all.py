@@ -9,15 +9,17 @@ import os
 import subprocess
 from typing import Tuple, List, Dict
 
-# ANSI color codes for better output
-GREEN = '\033[92m'
-RED = '\033[91m'
-YELLOW = '\033[93m'
-BLUE = '\033[94m'
-RESET = '\033[0m'
-BOLD = '\033[1m'
+# Use colorama for cross-platform color support
+import colorama
+colorama.init(autoreset=True)
+from colorama import Fore, Style
 
-
+GREEN = Fore.GREEN
+RED = Fore.RED
+YELLOW = Fore.YELLOW
+BLUE = Fore.BLUE
+RESET = Style.RESET_ALL
+BOLD = Style.BRIGHT
 class TestRunner:
     """Unified test runner for all LetsGetCrypto test suites"""
     
