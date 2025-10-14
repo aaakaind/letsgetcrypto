@@ -2,6 +2,7 @@
   "mcpServers": {
     "letsgetcrypto": {
       "command": "python",
+      "_comment": "Update 'mcp_server.py' to an absolute path as needed for your environment.",
       "args": [
         "mcp_server.py"
       ],
