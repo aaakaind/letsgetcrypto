@@ -174,14 +174,35 @@ Feature-rich desktop application with advanced capabilities:
 - **Crypto**: bitcoinlib, web3.py (testnet wallets)
 - **ML**: LSTM neural networks, ensemble methods
 
-## 🔧 Development
+## 🔧 Development & Testing
+
+### Running Tests
+
+The project includes a comprehensive test suite with a unified test runner:
+
+```bash
+# Run all available tests
+python test_all.py
+
+# Run specific test suites
+python test_all.py --tests integration claude
+
+# List available test suites
+python test_all.py --list
+
+# Run individual test files
+python test_integration.py      # Core integration tests
+python test_mcp_server.py        # MCP server tests
+python test_claude_integration.py # Claude AI tests
+```
+
+See [TESTING.md](TESTING.md) for detailed testing documentation.
+
+### Development Commands
 
 ```bash
 # Test core functionality
 python -c "from main import *; print('✓ All imports successful')"
-
-# Run validation tests
-python -c "exec(open('main.py').read().split('if __name__')[0]); print('✓ Tests passed')"
 
 # Test MCP server
 python3 crypto_mcp_server.py  # Run the MCP server
