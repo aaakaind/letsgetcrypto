@@ -4,14 +4,13 @@ Example usage of the LetsGetCrypto MCP tools
 This demonstrates how the tools can be called programmatically
 """
 
-import sys
-import os
-from pathlib import Path
+# NOTE: This script assumes it is run as a module, e.g.:
+#   python -m examples.mcp_usage_example
+# and that the parent directory is a package with __init__.py
 
-# Add parent directory to path
-sys.path.insert(0, str(Path(__file__).parent.parent))
 
-from mcp_server import (
+
+from ..mcp_server import (
     list_supported_coins,
     get_crypto_price,
     get_market_overview,
