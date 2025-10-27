@@ -107,3 +107,12 @@ aws-packages/
 
 # Docker Compose volumes
 postgres_data/
+
+# Jekyll
+docs/_site/
+docs/.sass-cache/
+docs/.jekyll-cache/
+docs/.jekyll-metadata
+docs/Gemfile.lock
+docs/vendor/
+.bundle/
