@@ -20,11 +20,8 @@ exclude:
   - Gemfile.lock
   - vendor
   - .bundle
-
-# Include files
-include:
-  - _layouts
   - _includes
+  - _layouts
 
 # Defaults
 defaults:
