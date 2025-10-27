@@ -12,7 +12,8 @@
 - **🔬 Technical Analysis**: 15+ indicators including SMA, EMA, RSI, MACD, Bollinger Bands
 - **🤖 Machine Learning**: LSTM, XGBoost, Logistic Regression with ensemble predictions
 - **🧠 AI-Powered Insights**: Claude Opus 4.1 integration for intelligent market analysis
-- **🔄 Feedback Loop**: Automated continuous learning with tiered training system (NEW!)
+- **♾️ Infinite Context Window**: Prompt caching for 90% cost reduction and 85% faster responses (NEW!)
+- **🔄 Feedback Loop**: Automated continuous learning with tiered training system
 - **💼 Wallet Integration**: Bitcoin & Ethereum testnet support
 - **⚡ Automated Trading**: Risk-managed trading with stop-loss and take-profit
 - **🖥️ Professional GUI**: PyQt5 desktop interface with real-time charts and controls
@@ -47,7 +48,7 @@ This script guides you through:
 
 👉 **[View Live Demo](https://aaakaind.github.io/letsgetcrypto/)** (Once GitHub Pages is configured)
 
-See [GITHUB_PAGES.md](GITHUB_PAGES.md) for setup instructions.
+See [GITHUB_PAGES.md](GITHUB_PAGES.md) for setup instructions and [JEKYLL_SETUP.md](JEKYLL_SETUP.md) for Jekyll customization.
 
 ### ☁️ Deploy to AWS (Production)
 
@@ -139,6 +140,12 @@ See **[FEEDBACK_LOOP.md](FEEDBACK_LOOP.md)** for detailed documentation.
 ### Quick Start & Deployment
 - **[🚀 Deployment Guide](DEPLOYMENT_GUIDE.md)**: **NEW!** Complete production deployment guide
 - **[✅ Release Checklist](RELEASE_CHECKLIST.md)**: **NEW!** Pre-deployment validation checklist
+- **[Complete User Guide](README_APP.md)**: Detailed features and usage
+- **[Claude AI Setup Guide](CLAUDE_SETUP.md)**: Configure AI-powered insights
+- **[Prompt Caching Guide](PROMPT_CACHING.md)**: Infinite context window with 90% cost reduction (NEW!)
+- **[Feedback Loop Guide](FEEDBACK_LOOP.md)**: Automated training and continuous learning
+### Getting Started
+- **[GitHub Pages Setup](GITHUB_PAGES.md)**: Free static dashboard deployment ⭐ NEW
 - **[Quick Deploy to AWS](QUICK_DEPLOY.md)**: Fastest way to deploy to AWS (5 minutes)
 - **[GitHub Pages Setup](GITHUB_PAGES.md)**: Free static dashboard deployment ⭐
 

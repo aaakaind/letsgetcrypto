@@ -1,6 +1,6 @@
 # LetsGetCrypto - GitHub Pages Dashboard
 
-This is a static version of the LetsGetCrypto dashboard hosted on GitHub Pages.
+This is a Jekyll-powered static version of the LetsGetCrypto dashboard hosted on GitHub Pages.
 
 ## Features
 
@@ -9,6 +9,7 @@ This is a static version of the LetsGetCrypto dashboard hosted on GitHub Pages.
 - 💹 Top cryptocurrencies ranked by market cap
 - 🔄 Auto-refresh every 30 seconds
 - 📱 Responsive design for mobile and desktop
+- 🔍 SEO optimized with automatic sitemaps and meta tags
 
 ## Usage
 
@@ -30,6 +31,47 @@ Visit the live dashboard at: `https://[username].github.io/letsgetcrypto/`
 
 ⚠️ **Educational Purpose**: This tool is for educational purposes only. Not financial advice.
 
+## Jekyll Structure
+
+This site uses Jekyll for better maintainability and SEO:
+
+```
+docs/
+├── _config.yml          # Jekyll configuration
+├── Gemfile              # Ruby dependencies
+├── _layouts/            # Page layouts
+│   └── default.html     # Main layout template
+├── _includes/           # Reusable components
+│   ├── header.html      # Site header
+│   └── footer.html      # Site footer
+├── index.html           # Main dashboard page
+├── css/                 # Stylesheets
+└── js/                  # JavaScript files
+```
+
+## Local Development
+
+### Prerequisites
+- Ruby 3.0+
+- Bundler
+
+### Setup and Run
+```bash
+# Install dependencies
+bundle install
+
+# Build the site
+bundle exec jekyll build
+
+# Serve locally
+bundle exec jekyll serve --port 8080
+# Visit: http://localhost:8080/letsgetcrypto/
+```
+
+## Customization
+
+See [JEKYLL_SETUP.md](../JEKYLL_SETUP.md) in the root directory for detailed Jekyll customization instructions.
+
 ## Differences from Full Application
 
 The GitHub Pages version is a static deployment and has some differences from the full Django application:
@@ -43,27 +85,17 @@ The GitHub Pages version is a static deployment and has some differences from th
 | Backend API | ❌ N/A | ✅ Django REST API |
 | Database | ❌ N/A | ✅ PostgreSQL/SQLite |
 
-## Running Locally
-
-To test the static version locally:
-
-```bash
-# Using Python's built-in HTTP server
-cd docs
-python -m http.server 8080
-
-# Then open: http://localhost:8080
-```
-
 ## Deployment
 
 This dashboard is automatically deployed to GitHub Pages via GitHub Actions whenever changes are pushed to the `main` branch.
 
 See `.github/workflows/deploy-pages.yml` for the deployment configuration.
 
-## Source Code
+## Resources
 
-Full source code with Django backend available at: https://github.com/aaakaind/letsgetcrypto
+- [Main Repository](https://github.com/aaakaind/letsgetcrypto)
+- [Jekyll Setup Guide](../JEKYLL_SETUP.md)
+- [GitHub Pages Guide](../GITHUB_PAGES.md)
 
 ## License
 
