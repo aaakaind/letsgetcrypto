@@ -25,6 +25,22 @@
 
 ## 🚀 Quick Start
 
+### ⚡ Fastest Way to Get Started
+
+Use our interactive quick-start script:
+
+```bash
+./quick-start.sh
+```
+
+This script guides you through:
+- 🐳 Docker Compose (local development)
+- ☁️  AWS Elastic Beanstalk (simple cloud)
+- 🚀 AWS ECS Fargate (production cloud)
+- 📄 GitHub Pages (static demo)
+- 🧪 Deployment validation
+- 📚 Documentation access
+
 ### 🌐 Try the Live Demo (GitHub Pages)
 
 **Want to try it instantly?** The dashboard is available as a static demo:
