@@ -7,13 +7,14 @@ import sys
 import os
 import json
 import django
-from django.test import TestCase, Client
-from django.urls import reverse
 
 # Setup Django settings
 os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'letsgetcrypto_django.settings')
 django.setup()
 
+# Now import Django models after setup
+from django.test import TestCase, Client
+from django.urls import reverse
 from crypto_api.models import WatchlistItem
 
 
@@ -319,8 +320,8 @@ def run_all_tests():
     # Create test runner
     runner = DiscoverRunner(verbosity=1, interactive=False, keepdb=False)
     
-    # Run tests
-    failures = runner.run_tests(['test_search_watchlist'])
+    # Run tests using module name
+    failures = runner.run_tests([__name__])
     
     print("\n" + "=" * 70)
     if failures == 0:

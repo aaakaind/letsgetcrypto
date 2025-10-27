@@ -7,6 +7,9 @@ Shows that the GUI components are properly integrated
 import sys
 import requests
 
+# Constants
+API_TIMEOUT = 10  # Timeout for API requests in seconds
+
 def test_api_endpoints():
     """Test that the API endpoints are working"""
     print("\n" + "=" * 70)
@@ -19,7 +22,7 @@ def test_api_endpoints():
     print("\n1. Testing Search API...")
     print("-" * 70)
     try:
-        response = requests.get(f"{base_url}/search/", params={'query': 'cardano'}, timeout=10)
+        response = requests.get(f"{base_url}/search/", params={'query': 'cardano'}, timeout=API_TIMEOUT)
         if response.status_code == 200:
             data = response.json()
             print(f"✅ Search successful! Found {data['count']} results")
@@ -42,7 +45,7 @@ def test_api_endpoints():
         response = requests.post(
             f"{base_url}/watchlist/add/",
             json=payload,
-            timeout=10
+            timeout=API_TIMEOUT
         )
         if response.status_code in [201, 409]:  # 409 if already exists
             if response.status_code == 201:
@@ -58,7 +61,7 @@ def test_api_endpoints():
     print("\n3. Testing View Watchlist...")
     print("-" * 70)
     try:
-        response = requests.get(f"{base_url}/watchlist/", timeout=10)
+        response = requests.get(f"{base_url}/watchlist/", timeout=API_TIMEOUT)
         if response.status_code == 200:
             data = response.json()
             print(f"✅ Watchlist retrieved successfully")

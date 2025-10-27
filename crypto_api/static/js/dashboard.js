@@ -4,6 +4,16 @@ let rsiChart = null;
 let currentCoin = 'bitcoin';
 let refreshInterval = null;
 
+// Utility function to escape HTML and prevent XSS attacks
+function escapeHtml(text) {
+    if (typeof text !== 'string') {
+        text = String(text);
+    }
+    const div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
+}
+
 // Initialize dashboard on page load
 $(document).ready(function() {
     initializeDashboard();
@@ -100,8 +110,8 @@ function addLog(message, type = 'info') {
     }
     
     logEntry.html(
-        `<span class="log-time">[${timeString}]</span> ` +
-        `<span class="${logClass}">${message}</span>`
+        `<span class="log-time">[${escapeHtml(timeString)}]</span> ` +
+        `<span class="${logClass}">${escapeHtml(message)}</span>`
     );
     
     const logContainer = $('#system-log');
@@ -373,15 +383,15 @@ function getPredictions() {
         if (signal === 'BUY') signalClass = 'signal-buy';
         if (signal === 'SELL') signalClass = 'signal-sell';
         
-        // Update predictions section
+        // Update predictions section (using escapeHtml to prevent XSS)
         const predictionsContent = $('#predictions-content');
         predictionsContent.html(`
             <div class="prediction-card ${signalClass}">
                 <h3>Latest Prediction</h3>
-                <p><strong>Signal:</strong> ${signal}</p>
-                <p><strong>Confidence:</strong> ${(confidence * 100).toFixed(1)}%</p>
-                <p><strong>Cryptocurrency:</strong> ${currentCoin.toUpperCase()}</p>
-                <p><strong>Generated:</strong> ${new Date().toLocaleString()}</p>
+                <p><strong>Signal:</strong> ${escapeHtml(signal)}</p>
+                <p><strong>Confidence:</strong> ${escapeHtml((confidence * 100).toFixed(1))}%</p>
+                <p><strong>Cryptocurrency:</strong> ${escapeHtml(currentCoin.toUpperCase())}</p>
+                <p><strong>Generated:</strong> ${escapeHtml(new Date().toLocaleString())}</p>
             </div>
         `);
         
@@ -416,12 +426,13 @@ function executeTrade(action) {
             
             const now = new Date();
             const row = $('<tr></tr>');
+            // Use escapeHtml to prevent XSS
             row.html(`
-                <td>${now.toLocaleString()}</td>
-                <td>${currentCoin.toUpperCase()}</td>
-                <td>${action.toUpperCase()}</td>
-                <td>$${formatNumber(Math.random() * 10000 + 10000)}</td>
-                <td>${(Math.random() * 0.1).toFixed(6)}</td>
+                <td>${escapeHtml(now.toLocaleString())}</td>
+                <td>${escapeHtml(currentCoin.toUpperCase())}</td>
+                <td>${escapeHtml(action.toUpperCase())}</td>
+                <td>$${escapeHtml(formatNumber(Math.random() * 10000 + 10000))}</td>
+                <td>${escapeHtml((Math.random() * 0.1).toFixed(6))}</td>
                 <td><span class="change-positive">Completed</span></td>
             `);
             tbody.prepend(row);
