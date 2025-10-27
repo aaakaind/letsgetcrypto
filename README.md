@@ -27,7 +27,7 @@
 
 👉 **[View Live Demo](https://aaakaind.github.io/letsgetcrypto/)** (Once GitHub Pages is configured)
 
-See [GITHUB_PAGES.md](GITHUB_PAGES.md) for setup instructions.
+See [GITHUB_PAGES.md](GITHUB_PAGES.md) for setup instructions and [JEKYLL_SETUP.md](JEKYLL_SETUP.md) for Jekyll customization.
 
 ### ☁️ Deploy to AWS (Production)
 
