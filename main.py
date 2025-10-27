@@ -1433,10 +1433,34 @@ class CryptoPredictionApp(QMainWindow):
         coin_group = QGroupBox("Cryptocurrency Selection")
         coin_layout = QVBoxLayout(coin_group)
         
+        # Search functionality
+        coin_layout.addWidget(QLabel("Search Cryptocurrency:"))
+        search_layout = QHBoxLayout()
+        self.search_input = QLineEdit()
+        self.search_input.setPlaceholderText("Type to search...")
+        search_layout.addWidget(self.search_input)
+        self.search_button = QPushButton("🔍")
+        self.search_button.setMaximumWidth(40)
+        self.search_button.clicked.connect(self.search_crypto)
+        search_layout.addWidget(self.search_button)
+        coin_layout.addLayout(search_layout)
+        
+        # Selected cryptocurrency
+        coin_layout.addWidget(QLabel("Selected Cryptocurrency:"))
         self.coin_combo = QComboBox()
+        self.coin_combo.setEditable(True)
         self.coin_combo.addItems(['bitcoin', 'ethereum', 'binancecoin', 'cardano', 'solana'])
-        coin_layout.addWidget(QLabel("Select Cryptocurrency:"))
         coin_layout.addWidget(self.coin_combo)
+        
+        # Watchlist buttons
+        watchlist_btn_layout = QHBoxLayout()
+        self.add_to_watchlist_button = QPushButton("Add to Watchlist")
+        self.add_to_watchlist_button.clicked.connect(self.add_to_watchlist)
+        watchlist_btn_layout.addWidget(self.add_to_watchlist_button)
+        self.view_watchlist_button = QPushButton("View Watchlist")
+        self.view_watchlist_button.clicked.connect(self.view_watchlist)
+        watchlist_btn_layout.addWidget(self.view_watchlist_button)
+        coin_layout.addLayout(watchlist_btn_layout)
         
         layout.addWidget(coin_group)
         
@@ -2082,6 +2106,295 @@ trading decisions. Always conduct your own research.
                 f"Win Rate={performance['win_rate']:.2%}, "
                 f"Trades={performance['total_trades']}"
             )
+    
+    def search_crypto(self):
+        """Search for cryptocurrencies"""
+        try:
+            query = self.search_input.text().strip()
+            if not query or len(query) < 2:
+                QMessageBox.warning(self, "Search", "Please enter at least 2 characters to search")
+                return
+            
+            self.status_label.setText("Searching...")
+            self.log_text.append(f"[{datetime.now().strftime('%H:%M:%S')}] Searching for: {query}")
+            
+            # Search using CoinGecko API
+            url = "https://api.coingecko.com/api/v3/search"
+            response = requests.get(url, params={'query': query}, timeout=10)
+            response.raise_for_status()
+            
+            data = response.json()
+            coins = data.get('coins', [])[:10]  # Limit to top 10 results
+            
+            if not coins:
+                QMessageBox.information(self, "Search Results", f"No cryptocurrencies found matching '{query}'")
+                self.status_label.setText("Ready")
+                return
+            
+            # Create a dialog to show results
+            from PyQt5.QtWidgets import QDialog, QDialogButtonBox
+            
+            dialog = QDialog(self)
+            dialog.setWindowTitle("Search Results")
+            dialog.setMinimumWidth(500)
+            dialog.setMinimumHeight(400)
+            
+            dialog_layout = QVBoxLayout(dialog)
+            dialog_layout.addWidget(QLabel(f"Found {len(coins)} results for '{query}':"))
+            
+            # Create table for results
+            results_table = QTableWidget()
+            results_table.setColumnCount(4)
+            results_table.setHorizontalHeaderLabels(['Name', 'Symbol', 'Market Cap Rank', 'Select'])
+            results_table.setRowCount(len(coins))
+            
+            for i, coin in enumerate(coins):
+                # Name
+                results_table.setItem(i, 0, QTableWidgetItem(coin.get('name', 'N/A')))
+                # Symbol
+                results_table.setItem(i, 1, QTableWidgetItem(coin.get('symbol', 'N/A').upper()))
+                # Market Cap Rank
+                rank = coin.get('market_cap_rank', 'N/A')
+                results_table.setItem(i, 2, QTableWidgetItem(str(rank) if rank else 'N/A'))
+                # Select button
+                select_btn = QPushButton("Select")
+                coin_id = coin.get('id')
+                select_btn.clicked.connect(lambda checked, cid=coin_id: self.select_crypto_from_search(cid, dialog))
+                results_table.setCellWidget(i, 3, select_btn)
+            
+            results_table.resizeColumnsToContents()
+            dialog_layout.addWidget(results_table)
+            
+            # Close button
+            close_btn = QPushButton("Close")
+            close_btn.clicked.connect(dialog.accept)
+            dialog_layout.addWidget(close_btn)
+            
+            self.status_label.setText("Ready")
+            dialog.exec_()
+            
+        except Exception as e:
+            self.status_label.setText(f"Search error: {str(e)}")
+            self.log_text.append(f"[{datetime.now().strftime('%H:%M:%S')}] Search error: {str(e)}")
+            QMessageBox.critical(self, "Search Error", f"Failed to search: {str(e)}")
+    
+    def select_crypto_from_search(self, coin_id, dialog):
+        """Select a cryptocurrency from search results"""
+        if coin_id:
+            # Check if coin is already in combo box
+            index = self.coin_combo.findText(coin_id)
+            if index == -1:
+                self.coin_combo.addItem(coin_id)
+                index = self.coin_combo.count() - 1
+            
+            self.coin_combo.setCurrentIndex(index)
+            self.log_text.append(f"[{datetime.now().strftime('%H:%M:%S')}] Selected: {coin_id}")
+            dialog.accept()
+    
+    def add_to_watchlist(self):
+        """Add current cryptocurrency to watchlist"""
+        try:
+            coin_id = self.coin_combo.currentText().strip()
+            if not coin_id:
+                QMessageBox.warning(self, "Watchlist", "Please select a cryptocurrency first")
+                return
+            
+            self.status_label.setText("Adding to watchlist...")
+            self.log_text.append(f"[{datetime.now().strftime('%H:%M:%S')}] Adding {coin_id} to watchlist...")
+            
+            # Get coin info from CoinGecko
+            url = f"https://api.coingecko.com/api/v3/coins/{coin_id}"
+            params = {
+                'localization': 'false',
+                'tickers': 'false',
+                'market_data': 'true',
+                'community_data': 'false',
+                'developer_data': 'false'
+            }
+            response = requests.get(url, params=params, timeout=10)
+            response.raise_for_status()
+            
+            data = response.json()
+            coin_name = data.get('name', coin_id)
+            coin_symbol = data.get('symbol', '')
+            
+            # Store in watchlist (in-memory for GUI)
+            if not hasattr(self, 'watchlist'):
+                self.watchlist = {}
+            
+            if coin_id in self.watchlist:
+                QMessageBox.information(self, "Watchlist", f"{coin_name} is already in your watchlist")
+            else:
+                self.watchlist[coin_id] = {
+                    'name': coin_name,
+                    'symbol': coin_symbol,
+                    'added_at': datetime.now().isoformat()
+                }
+                self.status_label.setText(f"Added {coin_name} to watchlist")
+                self.log_text.append(f"[{datetime.now().strftime('%H:%M:%S')}] Added {coin_name} to watchlist")
+                QMessageBox.information(self, "Watchlist", f"{coin_name} added to watchlist successfully!")
+            
+        except Exception as e:
+            self.status_label.setText(f"Error: {str(e)}")
+            self.log_text.append(f"[{datetime.now().strftime('%H:%M:%S')}] Watchlist error: {str(e)}")
+            QMessageBox.critical(self, "Error", f"Failed to add to watchlist: {str(e)}")
+    
+    def view_watchlist(self):
+        """View and monitor watchlist cryptocurrencies"""
+        try:
+            if not hasattr(self, 'watchlist') or not self.watchlist:
+                QMessageBox.information(self, "Watchlist", "Your watchlist is empty. Add cryptocurrencies to start monitoring!")
+                return
+            
+            self.status_label.setText("Loading watchlist...")
+            self.log_text.append(f"[{datetime.now().strftime('%H:%M:%S')}] Loading watchlist...")
+            
+            # Fetch current prices for all watchlist items
+            coin_ids = ','.join(self.watchlist.keys())
+            url = "https://api.coingecko.com/api/v3/simple/price"
+            params = {
+                'ids': coin_ids,
+                'vs_currencies': 'usd',
+                'include_24hr_change': 'true',
+                'include_market_cap': 'true'
+            }
+            
+            response = requests.get(url, params=params, timeout=10)
+            response.raise_for_status()
+            prices_data = response.json()
+            
+            # Create watchlist dialog
+            from PyQt5.QtWidgets import QDialog
+            
+            dialog = QDialog(self)
+            dialog.setWindowTitle("Cryptocurrency Watchlist - Monitor Price Changes")
+            dialog.setMinimumWidth(700)
+            dialog.setMinimumHeight(500)
+            
+            dialog_layout = QVBoxLayout(dialog)
+            
+            info_label = QLabel("📊 Monitor your cryptocurrencies throughout the day")
+            info_label.setStyleSheet("font-size: 14px; font-weight: bold; padding: 10px;")
+            dialog_layout.addWidget(info_label)
+            
+            # Create table for watchlist
+            watchlist_table = QTableWidget()
+            watchlist_table.setColumnCount(6)
+            watchlist_table.setHorizontalHeaderLabels([
+                'Name', 'Symbol', 'Current Price', '24h Change %', 'Market Cap', 'Actions'
+            ])
+            watchlist_table.setRowCount(len(self.watchlist))
+            
+            for i, (coin_id, coin_info) in enumerate(self.watchlist.items()):
+                price_info = prices_data.get(coin_id, {})
+                
+                # Name
+                watchlist_table.setItem(i, 0, QTableWidgetItem(coin_info['name']))
+                
+                # Symbol
+                watchlist_table.setItem(i, 1, QTableWidgetItem(coin_info['symbol'].upper()))
+                
+                # Current Price
+                current_price = price_info.get('usd', 0)
+                watchlist_table.setItem(i, 2, QTableWidgetItem(f"${current_price:,.2f}" if current_price else "N/A"))
+                
+                # 24h Change
+                change_24h = price_info.get('usd_24h_change', 0)
+                change_item = QTableWidgetItem(f"{change_24h:+.2f}%" if change_24h else "N/A")
+                if change_24h:
+                    if change_24h > 0:
+                        change_item.setForeground(Qt.green)
+                    else:
+                        change_item.setForeground(Qt.red)
+                watchlist_table.setItem(i, 3, change_item)
+                
+                # Market Cap
+                market_cap = price_info.get('usd_market_cap', 0)
+                if market_cap:
+                    if market_cap >= 1e9:
+                        cap_str = f"${market_cap/1e9:.2f}B"
+                    elif market_cap >= 1e6:
+                        cap_str = f"${market_cap/1e6:.2f}M"
+                    else:
+                        cap_str = f"${market_cap:,.0f}"
+                else:
+                    cap_str = "N/A"
+                watchlist_table.setItem(i, 4, QTableWidgetItem(cap_str))
+                
+                # Actions
+                actions_widget = QWidget()
+                actions_layout = QHBoxLayout(actions_widget)
+                actions_layout.setContentsMargins(2, 2, 2, 2)
+                
+                load_btn = QPushButton("Load")
+                load_btn.clicked.connect(lambda checked, cid=coin_id: self.load_from_watchlist(cid, dialog))
+                actions_layout.addWidget(load_btn)
+                
+                remove_btn = QPushButton("Remove")
+                remove_btn.clicked.connect(lambda checked, cid=coin_id: self.remove_from_watchlist(cid, dialog))
+                actions_layout.addWidget(remove_btn)
+                
+                watchlist_table.setCellWidget(i, 5, actions_widget)
+            
+            watchlist_table.resizeColumnsToContents()
+            dialog_layout.addWidget(watchlist_table)
+            
+            # Buttons
+            button_layout = QHBoxLayout()
+            
+            refresh_btn = QPushButton("🔄 Refresh Prices")
+            refresh_btn.clicked.connect(lambda: self.refresh_watchlist_dialog(dialog))
+            button_layout.addWidget(refresh_btn)
+            
+            close_btn = QPushButton("Close")
+            close_btn.clicked.connect(dialog.accept)
+            button_layout.addWidget(close_btn)
+            
+            dialog_layout.addLayout(button_layout)
+            
+            self.status_label.setText("Ready")
+            dialog.exec_()
+            
+        except Exception as e:
+            self.status_label.setText(f"Error: {str(e)}")
+            self.log_text.append(f"[{datetime.now().strftime('%H:%M:%S')}] Watchlist error: {str(e)}")
+            QMessageBox.critical(self, "Error", f"Failed to load watchlist: {str(e)}")
+    
+    def load_from_watchlist(self, coin_id, dialog):
+        """Load a cryptocurrency from watchlist"""
+        # Check if coin is already in combo box
+        index = self.coin_combo.findText(coin_id)
+        if index == -1:
+            self.coin_combo.addItem(coin_id)
+            index = self.coin_combo.count() - 1
+        
+        self.coin_combo.setCurrentIndex(index)
+        self.log_text.append(f"[{datetime.now().strftime('%H:%M:%S')}] Loaded: {coin_id}")
+        dialog.accept()
+    
+    def remove_from_watchlist(self, coin_id, dialog):
+        """Remove a cryptocurrency from watchlist"""
+        if hasattr(self, 'watchlist') and coin_id in self.watchlist:
+            coin_name = self.watchlist[coin_id]['name']
+            reply = QMessageBox.question(
+                self, 
+                'Confirm Removal',
+                f"Remove {coin_name} from watchlist?",
+                QMessageBox.Yes | QMessageBox.No,
+                QMessageBox.No
+            )
+            
+            if reply == QMessageBox.Yes:
+                del self.watchlist[coin_id]
+                self.log_text.append(f"[{datetime.now().strftime('%H:%M:%S')}] Removed {coin_name} from watchlist")
+                dialog.accept()
+                # Reopen the dialog to show updated list
+                self.view_watchlist()
+    
+    def refresh_watchlist_dialog(self, dialog):
+        """Refresh the watchlist dialog"""
+        dialog.accept()
+        self.view_watchlist()
 
 def main():
     """Main application entry point"""

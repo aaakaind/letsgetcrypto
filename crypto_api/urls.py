@@ -16,4 +16,10 @@ urlpatterns = [
     path('price/<str:symbol>/', views.get_crypto_price, name='crypto_price'),
     path('history/<str:symbol>/', views.get_crypto_history, name='crypto_history'),
     path('market/', views.get_market_overview, name='market_overview'),
+    
+    # Search and watchlist endpoints
+    path('search/', views.search_crypto, name='search_crypto'),
+    path('watchlist/', views.get_watchlist, name='get_watchlist'),
+    path('watchlist/add/', views.add_to_watchlist, name='add_to_watchlist'),
+    path('watchlist/remove/<str:coin_id>/', views.remove_from_watchlist, name='remove_from_watchlist'),
 ]
