@@ -1,0 +1,55 @@
+# Jekyll Configuration for LetsGetCrypto Dashboard
+title: LetsGetCrypto
+description: Advanced Cryptocurrency Trading & Prediction Tool with Machine Learning
+baseurl: "/letsgetcrypto"
+url: "https://aaakaind.github.io"
+
+# Theme
+theme: minima
+
+# Build settings
+markdown: kramdown
+highlighter: rouge
+
+# Exclude files from processing
+exclude:
+  - README.md
+  - DEPLOYMENT_FLOW.md
+  - SETUP.md
+  - Gemfile
+  - Gemfile.lock
+  - vendor
+  - .bundle
+
+# Include files
+include:
+  - _layouts
+  - _includes
+
+# Defaults
+defaults:
+  - scope:
+      path: ""
+    values:
+      layout: "default"
+
+# Plugin settings (GitHub Pages compatible)
+plugins:
+  - jekyll-feed
+  - jekyll-seo-tag
+  - jekyll-sitemap
+
+# SEO settings
+author: aaakaind
+twitter:
+  username: aaakaind
+  card: summary
+
+social:
+  name: LetsGetCrypto
+  links:
+    - https://github.com/aaakaind/letsgetcrypto
+
+# Sass/SCSS settings
+sass:
+  style: compressed
