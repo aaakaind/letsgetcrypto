@@ -1,6 +1,7 @@
 import logging
 import time
 from functools import wraps
+from pathlib import Path
 
 from django.http import JsonResponse
 from django.shortcuts import render
@@ -11,6 +12,17 @@ from django.db import connection
 import requests
 
 logger = logging.getLogger(__name__)
+
+# Read version from VERSION file
+def get_version():
+    """Get the application version from VERSION file"""
+    try:
+        version_file = Path(settings.BASE_DIR) / 'VERSION'
+        if version_file.exists():
+            return version_file.read_text().strip()
+        return '1.0.0'
+    except Exception:
+        return '1.0.0'
 
 
 def handle_api_errors(func):
@@ -43,7 +55,7 @@ def health_check(request):
     try:
         status = {
             'status': 'healthy',
-            'version': '1.0.0',
+            'version': get_version(),
             'components': {
                 'database': 'ok',
                 'external_apis': 'ok'
