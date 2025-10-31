@@ -14,7 +14,6 @@ django.setup()
 
 # Now import Django models after setup
 from django.test import TestCase, Client
-from django.urls import reverse
 from crypto_api.models import WatchlistItem
 
 
