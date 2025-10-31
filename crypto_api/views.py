@@ -1,3 +1,4 @@
+import json as json_lib
 import logging
 import time
 from functools import wraps
@@ -9,6 +10,8 @@ from django.views.decorators.http import require_http_methods
 from django.conf import settings
 from django.db import connection
 import requests
+
+from .models import WatchlistItem
 
 logger = logging.getLogger(__name__)
 
@@ -273,8 +276,6 @@ def search_crypto(request):
 @handle_api_errors
 def get_watchlist(request):
     """Get all cryptocurrencies in the watchlist"""
-    from .models import WatchlistItem
-    
     watchlist_items = WatchlistItem.objects.all()
     
     # Get current prices for all watchlist items
@@ -332,9 +333,6 @@ def get_watchlist(request):
 @handle_api_errors
 def add_to_watchlist(request):
     """Add a cryptocurrency to the watchlist"""
-    import json as json_lib
-    from .models import WatchlistItem
-    
     try:
         data = json_lib.loads(request.body)
     except json_lib.JSONDecodeError:
@@ -403,8 +401,6 @@ def add_to_watchlist(request):
 @handle_api_errors
 def remove_from_watchlist(request, coin_id):
     """Remove a cryptocurrency from the watchlist"""
-    from .models import WatchlistItem
-    
     try:
         item = WatchlistItem.objects.get(coin_id=coin_id)
         coin_name = item.coin_name

@@ -51,7 +51,7 @@ from PyQt5.QtWidgets import (QApplication, QMainWindow, QVBoxLayout, QHBoxLayout
                             QWidget, QPushButton, QLabel, QComboBox, QLineEdit, 
                             QTextEdit, QCheckBox, QSpinBox, QDoubleSpinBox,
                             QTabWidget, QGridLayout, QGroupBox, QMessageBox,
-                            QProgressBar, QSplitter, QTableWidget, QTableWidgetItem)
+                            QProgressBar, QSplitter, QTableWidget, QTableWidgetItem, QDialog)
 from PyQt5.QtCore import QThread, pyqtSignal, QTimer, Qt
 from PyQt5.QtGui import QFont, QPixmap
 
@@ -2132,8 +2132,6 @@ trading decisions. Always conduct your own research.
                 return
             
             # Create a dialog to show results
-            from PyQt5.QtWidgets import QDialog, QDialogButtonBox
-            
             dialog = QDialog(self)
             dialog.setWindowTitle("Search Results")
             dialog.setMinimumWidth(500)
@@ -2264,8 +2262,6 @@ trading decisions. Always conduct your own research.
             prices_data = response.json()
             
             # Create watchlist dialog
-            from PyQt5.QtWidgets import QDialog
-            
             dialog = QDialog(self)
             dialog.setWindowTitle("Cryptocurrency Watchlist - Monitor Price Changes")
             dialog.setMinimumWidth(700)
