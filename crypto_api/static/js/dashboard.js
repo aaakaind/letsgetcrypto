@@ -4,6 +4,16 @@ let rsiChart = null;
 let currentCoin = 'bitcoin';
 let refreshInterval = null;
 
+// Utility function to escape HTML and prevent XSS attacks
+function escapeHtml(text) {
+    if (typeof text !== 'string') {
+        text = String(text);
+    }
+    const div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
+}
+
 // Initialize dashboard on page load
 $(document).ready(function() {
     initializeDashboard();
@@ -100,8 +110,8 @@ function addLog(message, type = 'info') {
     }
     
     logEntry.html(
-        `<span class="log-time">[${timeString}]</span> ` +
-        `<span class="${logClass}">${message}</span>`
+        `<span class="log-time">[${escapeHtml(timeString)}]</span> ` +
+        `<span class="${logClass}">${escapeHtml(message)}</span>`
     );
     
     const logContainer = $('#system-log');
@@ -373,15 +383,15 @@ function getPredictions() {
         if (signal === 'BUY') signalClass = 'signal-buy';
         if (signal === 'SELL') signalClass = 'signal-sell';
         
-        // Update predictions section
+        // Update predictions section (using escapeHtml to prevent XSS)
         const predictionsContent = $('#predictions-content');
         predictionsContent.html(`
             <div class="prediction-card ${signalClass}">
                 <h3>Latest Prediction</h3>
-                <p><strong>Signal:</strong> ${signal}</p>
-                <p><strong>Confidence:</strong> ${(confidence * 100).toFixed(1)}%</p>
-                <p><strong>Cryptocurrency:</strong> ${currentCoin.toUpperCase()}</p>
-                <p><strong>Generated:</strong> ${new Date().toLocaleString()}</p>
+                <p><strong>Signal:</strong> ${escapeHtml(signal)}</p>
+                <p><strong>Confidence:</strong> ${escapeHtml((confidence * 100).toFixed(1))}%</p>
+                <p><strong>Cryptocurrency:</strong> ${escapeHtml(currentCoin.toUpperCase())}</p>
+                <p><strong>Generated:</strong> ${escapeHtml(new Date().toLocaleString())}</p>
             </div>
         `);
         
@@ -416,12 +426,13 @@ function executeTrade(action) {
             
             const now = new Date();
             const row = $('<tr></tr>');
+            // Use escapeHtml to prevent XSS
             row.html(`
-                <td>${now.toLocaleString()}</td>
-                <td>${currentCoin.toUpperCase()}</td>
-                <td>${action.toUpperCase()}</td>
-                <td>$${formatNumber(Math.random() * 10000 + 10000)}</td>
-                <td>${(Math.random() * 0.1).toFixed(6)}</td>
+                <td>${escapeHtml(now.toLocaleString())}</td>
+                <td>${escapeHtml(currentCoin.toUpperCase())}</td>
+                <td>${escapeHtml(action.toUpperCase())}</td>
+                <td>$${escapeHtml(formatNumber(Math.random() * 10000 + 10000))}</td>
+                <td>${escapeHtml((Math.random() * 0.1).toFixed(6))}</td>
                 <td><span class="change-positive">Completed</span></td>
             `);
             tbody.prepend(row);
@@ -458,9 +469,381 @@ function formatPercentage(num) {
     return parseFloat(num).toFixed(2) + '%';
 }
 
+// ===== Search Functionality =====
+let searchResults = [];
+
+$('#search-btn').on('click', function() {
+    searchCrypto();
+});
+
+$('#search-input').on('keypress', function(e) {
+    if (e.which === 13) { // Enter key
+        searchCrypto();
+    }
+});
+
+$('#select-search-result').on('click', function() {
+    selectSearchResult();
+});
+
+function searchCrypto() {
+    const query = $('#search-input').val().trim();
+    
+    if (!query || query.length < 2) {
+        alert('Please enter at least 2 characters to search');
+        return;
+    }
+    
+    addLog(`Searching for: ${query}`);
+    
+    $.ajax({
+        url: '/api/search/',
+        method: 'GET',
+        data: { query: query },
+        success: function(response) {
+            searchResults = response.results || [];
+            displaySearchResults(searchResults);
+            addLog(`Found ${searchResults.length} results`);
+        },
+        error: function(xhr, status, error) {
+            addLog(`Search failed: ${error}`, 'error');
+            alert('Search failed. Please try again.');
+        }
+    });
+}
+
+function displaySearchResults(results) {
+    const select = $('#search-results-select');
+    select.empty();
+    
+    if (results.length === 0) {
+        $('#search-results').hide();
+        alert('No results found');
+        return;
+    }
+    
+    results.forEach(function(coin) {
+        const rank = coin.market_cap_rank ? ` (Rank: ${coin.market_cap_rank})` : '';
+        select.append(
+            $('<option>')
+                .val(coin.id)
+                .text(`${coin.name} (${coin.symbol})${rank}`)
+        );
+    });
+    
+    $('#search-results').show();
+}
+
+function selectSearchResult() {
+    const selectedId = $('#search-results-select').val();
+    
+    if (!selectedId) {
+        alert('Please select a cryptocurrency from the results');
+        return;
+    }
+    
+    // Add to coin selector if not already there
+    const coinSelect = $('#coin-select');
+    if (coinSelect.find(`option[value="${selectedId}"]`).length === 0) {
+        const selectedResult = searchResults.find(r => r.id === selectedId);
+        if (selectedResult) {
+            coinSelect.append(
+                $('<option>')
+                    .val(selectedId)
+                    .text(`${selectedResult.name} (${selectedResult.symbol})`)
+            );
+        }
+    }
+    
+    // Select the coin
+    coinSelect.val(selectedId);
+    currentCoin = selectedId;
+    
+    // Hide search results
+    $('#search-results').hide();
+    $('#search-input').val('');
+    
+    addLog(`Selected: ${selectedId}`);
+    
+    // Load data for the selected coin
+    loadCryptoPrice();
+    loadCryptoHistory();
+}
+
+// ===== Watchlist Functionality =====
+let watchlistRefreshInterval = null;
+
+$('#add-watchlist-btn').on('click', function() {
+    addToWatchlist();
+});
+
+$('#view-watchlist-btn').on('click', function() {
+    viewWatchlist();
+});
+
+function addToWatchlist() {
+    const coinId = currentCoin;
+    
+    if (!coinId) {
+        alert('Please select a cryptocurrency first');
+        return;
+    }
+    
+    addLog(`Adding ${coinId} to watchlist...`);
+    
+    // Get coin info first
+    $.ajax({
+        url: `https://api.coingecko.com/api/v3/coins/${coinId}`,
+        method: 'GET',
+        data: {
+            localization: 'false',
+            tickers: 'false',
+            market_data: 'false',
+            community_data: 'false',
+            developer_data: 'false'
+        },
+        success: function(coinData) {
+            // Now add to watchlist
+            $.ajax({
+                url: '/api/watchlist/add/',
+                method: 'POST',
+                contentType: 'application/json',
+                data: JSON.stringify({
+                    coin_id: coinId,
+                    coin_name: coinData.name || coinId,
+                    coin_symbol: coinData.symbol || ''
+                }),
+                success: function(response) {
+                    addLog(`Added ${coinData.name} to watchlist`);
+                    alert(`${coinData.name} added to watchlist successfully!`);
+                    updateWatchlistCount();
+                },
+                error: function(xhr, status, error) {
+                    const errorMsg = xhr.responseJSON?.error || error;
+                    addLog(`Failed to add to watchlist: ${errorMsg}`, 'error');
+                    
+                    if (xhr.status === 409) {
+                        alert('This cryptocurrency is already in your watchlist');
+                    } else {
+                        alert(`Failed to add to watchlist: ${errorMsg}`);
+                    }
+                }
+            });
+        },
+        error: function(xhr, status, error) {
+            addLog(`Failed to get coin info: ${error}`, 'error');
+            alert('Failed to get cryptocurrency information');
+        }
+    });
+}
+
+function viewWatchlist() {
+    addLog('Loading watchlist...');
+    
+    $.ajax({
+        url: '/api/watchlist/',
+        method: 'GET',
+        success: function(response) {
+            const watchlist = response.watchlist || [];
+            
+            if (watchlist.length === 0) {
+                alert('Your watchlist is empty. Add cryptocurrencies to start monitoring!');
+                return;
+            }
+            
+            displayWatchlist(watchlist);
+            
+            // Show watchlist section
+            $('#watchlist-section').show();
+            
+            // Start auto-refresh for watchlist
+            if (watchlistRefreshInterval) {
+                clearInterval(watchlistRefreshInterval);
+            }
+            watchlistRefreshInterval = setInterval(function() {
+                refreshWatchlist();
+            }, 30000); // Refresh every 30 seconds
+            
+            addLog(`Loaded ${watchlist.length} watchlist items`);
+        },
+        error: function(xhr, status, error) {
+            addLog(`Failed to load watchlist: ${error}`, 'error');
+            alert('Failed to load watchlist');
+        }
+    });
+}
+
+function displayWatchlist(watchlist) {
+    const tbody = $('#watchlist-table-body');
+    tbody.empty();
+    
+    if (watchlist.length === 0) {
+        tbody.append('<tr><td colspan="7" class="empty-state">No cryptocurrencies in watchlist</td></tr>');
+        return;
+    }
+    
+    watchlist.forEach(function(item) {
+        const row = $('<tr>');
+        
+        // Name
+        row.append($('<td>').text(item.name));
+        
+        // Symbol
+        row.append($('<td>').text(item.symbol));
+        
+        // Price
+        const price = item.current_price_usd ? `$${formatNumber(item.current_price_usd)}` : 'N/A';
+        row.append($('<td>').text(price));
+        
+        // 24h Change
+        const change = item.price_change_24h_percent;
+        const changeCell = $('<td>');
+        if (change !== null && change !== undefined) {
+            const changeText = `${change >= 0 ? '+' : ''}${change.toFixed(2)}%`;
+            changeCell.text(changeText);
+            changeCell.css('color', change >= 0 ? '#10b981' : '#ef4444');
+        } else {
+            changeCell.text('N/A');
+        }
+        row.append(changeCell);
+        
+        // Market Cap
+        const marketCap = item.market_cap_usd ? `$${formatNumber(item.market_cap_usd)}` : 'N/A';
+        row.append($('<td>').text(marketCap));
+        
+        // Last Updated
+        const lastUpdated = new Date(item.last_updated).toLocaleTimeString();
+        row.append($('<td>').text(lastUpdated));
+        
+        // Actions
+        const actionsCell = $('<td>');
+        const loadBtn = $('<button>')
+            .addClass('btn btn-sm btn-primary')
+            .text('Load')
+            .css({'margin-right': '5px', 'padding': '4px 8px', 'font-size': '12px'})
+            .on('click', function() {
+                loadFromWatchlist(item.id);
+            });
+        
+        const removeBtn = $('<button>')
+            .addClass('btn btn-sm btn-danger')
+            .text('Remove')
+            .css({'padding': '4px 8px', 'font-size': '12px'})
+            .on('click', function() {
+                removeFromWatchlist(item.id);
+            });
+        
+        actionsCell.append(loadBtn).append(removeBtn);
+        row.append(actionsCell);
+        
+        tbody.append(row);
+    });
+}
+
+function refreshWatchlist() {
+    $.ajax({
+        url: '/api/watchlist/',
+        method: 'GET',
+        success: function(response) {
+            const watchlist = response.watchlist || [];
+            displayWatchlist(watchlist);
+            addLog('Watchlist refreshed');
+        },
+        error: function(xhr, status, error) {
+            console.error('Failed to refresh watchlist:', error);
+        }
+    });
+}
+
+function loadFromWatchlist(coinId) {
+    // Add to coin selector if not already there
+    const coinSelect = $('#coin-select');
+    if (coinSelect.find(`option[value="${coinId}"]`).length === 0) {
+        // Get coin info to add proper label
+        $.ajax({
+            url: `https://api.coingecko.com/api/v3/coins/${coinId}`,
+            method: 'GET',
+            data: {
+                localization: 'false',
+                tickers: 'false',
+                market_data: 'false',
+                community_data: 'false',
+                developer_data: 'false'
+            },
+            success: function(coinData) {
+                coinSelect.append(
+                    $('<option>')
+                        .val(coinId)
+                        .text(`${coinData.name} (${coinData.symbol.toUpperCase()})`)
+                );
+                selectCoin(coinId);
+            },
+            error: function() {
+                // Add with just the ID if we can't get the name
+                coinSelect.append(
+                    $('<option>')
+                        .val(coinId)
+                        .text(coinId)
+                );
+                selectCoin(coinId);
+            }
+        });
+    } else {
+        selectCoin(coinId);
+    }
+}
+
+function selectCoin(coinId) {
+    $('#coin-select').val(coinId);
+    currentCoin = coinId;
+    addLog(`Loaded: ${coinId}`);
+    loadCryptoPrice();
+    loadCryptoHistory();
+}
+
+function removeFromWatchlist(coinId) {
+    if (!confirm('Remove this cryptocurrency from your watchlist?')) {
+        return;
+    }
+    
+    $.ajax({
+        url: `/api/watchlist/remove/${coinId}/`,
+        method: 'DELETE',
+        success: function(response) {
+            addLog(`Removed from watchlist: ${coinId}`);
+            refreshWatchlist();
+            updateWatchlistCount();
+        },
+        error: function(xhr, status, error) {
+            addLog(`Failed to remove from watchlist: ${error}`, 'error');
+            alert('Failed to remove from watchlist');
+        }
+    });
+}
+
+function updateWatchlistCount() {
+    $.ajax({
+        url: '/api/watchlist/',
+        method: 'GET',
+        success: function(response) {
+            const count = response.count || 0;
+            $('#watchlist-count').text(count);
+        },
+        error: function(xhr, status, error) {
+            console.error('Failed to update watchlist count:', error);
+        }
+    });
+}
+
+// Initialize watchlist count on load
+updateWatchlistCount();
+
 // Clean up on page unload
 $(window).on('beforeunload', function() {
     if (refreshInterval) {
         clearInterval(refreshInterval);
+    }
+    if (watchlistRefreshInterval) {
+        clearInterval(watchlistRefreshInterval);
     }
 });

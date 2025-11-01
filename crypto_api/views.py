@@ -1,3 +1,4 @@
+import json as json_lib
 import logging
 import time
 from functools import wraps
@@ -10,6 +11,8 @@ from django.views.decorators.http import require_http_methods
 from django.conf import settings
 from django.db import connection
 import requests
+
+from .models import WatchlistItem
 
 logger = logging.getLogger(__name__)
 
@@ -226,6 +229,205 @@ def get_market_overview(request):
     }
     
     return json_response_with_timestamp(result)
+
+
+@csrf_exempt
+@require_http_methods(["GET"])
+@handle_api_errors
+def search_crypto(request):
+    """Search for cryptocurrencies by name or symbol"""
+    query = request.GET.get('query', '').strip()
+    
+    if not query:
+        return JsonResponse({
+            'error': 'Query parameter is required'
+        }, status=400)
+    
+    if len(query) < 2:
+        return JsonResponse({
+            'error': 'Query must be at least 2 characters'
+        }, status=400)
+    
+    # Use CoinGecko's search endpoint
+    coingecko_url = f"{settings.CRYPTO_API_SETTINGS['COINGECKO_API_URL']}/search"
+    params = {'query': query}
+    
+    response = requests.get(
+        coingecko_url,
+        params=params,
+        timeout=settings.CRYPTO_API_SETTINGS['REQUEST_TIMEOUT']
+    )
+    response.raise_for_status()
+    
+    data = response.json()
+    coins = data.get('coins', [])[:20]  # Limit to top 20 results
+    
+    results = [
+        {
+            'id': coin.get('id'),
+            'name': coin.get('name'),
+            'symbol': coin.get('symbol', '').upper(),
+            'market_cap_rank': coin.get('market_cap_rank'),
+            'thumb': coin.get('thumb'),
+            'large': coin.get('large')
+        }
+        for coin in coins
+    ]
+    
+    result = {
+        'query': query,
+        'results': results,
+        'count': len(results)
+    }
+    
+    return json_response_with_timestamp(result)
+
+
+@csrf_exempt
+@require_http_methods(["GET"])
+@handle_api_errors
+def get_watchlist(request):
+    """Get all cryptocurrencies in the watchlist"""
+    watchlist_items = WatchlistItem.objects.all()
+    
+    # Get current prices for all watchlist items
+    coin_ids = [item.coin_id for item in watchlist_items]
+    
+    if coin_ids:
+        # Batch fetch prices from CoinGecko
+        coingecko_url = f"{settings.CRYPTO_API_SETTINGS['COINGECKO_API_URL']}/simple/price"
+        params = {
+            'ids': ','.join(coin_ids),
+            'vs_currencies': 'usd',
+            'include_24hr_change': 'true',
+            'include_market_cap': 'true'
+        }
+        
+        try:
+            response = requests.get(
+                coingecko_url,
+                params=params,
+                timeout=settings.CRYPTO_API_SETTINGS['REQUEST_TIMEOUT']
+            )
+            response.raise_for_status()
+            prices_data = response.json()
+        except Exception as e:
+            logger.warning(f"Failed to fetch prices for watchlist: {e}")
+            prices_data = {}
+    else:
+        prices_data = {}
+    
+    results = []
+    for item in watchlist_items:
+        price_info = prices_data.get(item.coin_id, {})
+        results.append({
+            'id': item.coin_id,
+            'name': item.coin_name,
+            'symbol': item.coin_symbol.upper(),
+            'added_at': item.added_at.isoformat(),
+            'current_price_usd': price_info.get('usd'),
+            'price_change_24h_percent': price_info.get('usd_24h_change'),
+            'market_cap_usd': price_info.get('usd_market_cap'),
+            'last_price': float(item.last_price) if item.last_price else None,
+            'last_updated': item.last_updated.isoformat()
+        })
+    
+    result = {
+        'watchlist': results,
+        'count': len(results)
+    }
+    
+    return json_response_with_timestamp(result)
+
+
+@csrf_exempt
+@require_http_methods(["POST"])
+@handle_api_errors
+def add_to_watchlist(request):
+    """Add a cryptocurrency to the watchlist"""
+    try:
+        data = json_lib.loads(request.body)
+    except json_lib.JSONDecodeError:
+        return JsonResponse({
+            'error': 'Invalid JSON in request body'
+        }, status=400)
+    
+    coin_id = data.get('coin_id', '').strip()
+    coin_name = data.get('coin_name', '').strip()
+    coin_symbol = data.get('coin_symbol', '').strip()
+    
+    if not all([coin_id, coin_name, coin_symbol]):
+        return JsonResponse({
+            'error': 'coin_id, coin_name, and coin_symbol are required'
+        }, status=400)
+    
+    # Check if already in watchlist
+    if WatchlistItem.objects.filter(coin_id=coin_id).exists():
+        return JsonResponse({
+            'error': f'{coin_name} is already in your watchlist'
+        }, status=409)
+    
+    # Get current price
+    try:
+        coingecko_url = f"{settings.CRYPTO_API_SETTINGS['COINGECKO_API_URL']}/simple/price"
+        params = {
+            'ids': coin_id,
+            'vs_currencies': 'usd'
+        }
+        response = requests.get(
+            coingecko_url,
+            params=params,
+            timeout=settings.CRYPTO_API_SETTINGS['REQUEST_TIMEOUT']
+        )
+        response.raise_for_status()
+        price_data = response.json()
+        current_price = price_data.get(coin_id, {}).get('usd')
+    except Exception as e:
+        logger.warning(f"Failed to fetch initial price: {e}")
+        current_price = None
+    
+    # Add to watchlist
+    item = WatchlistItem.objects.create(
+        coin_id=coin_id,
+        coin_name=coin_name,
+        coin_symbol=coin_symbol,
+        last_price=current_price
+    )
+    
+    result = {
+        'success': True,
+        'message': f'{coin_name} added to watchlist',
+        'item': {
+            'id': item.coin_id,
+            'name': item.coin_name,
+            'symbol': item.coin_symbol.upper(),
+            'added_at': item.added_at.isoformat()
+        }
+    }
+    
+    return json_response_with_timestamp(result, status=201)
+
+
+@csrf_exempt
+@require_http_methods(["DELETE"])
+@handle_api_errors
+def remove_from_watchlist(request, coin_id):
+    """Remove a cryptocurrency from the watchlist"""
+    try:
+        item = WatchlistItem.objects.get(coin_id=coin_id)
+        coin_name = item.coin_name
+        item.delete()
+        
+        result = {
+            'success': True,
+            'message': f'{coin_name} removed from watchlist'
+        }
+        
+        return json_response_with_timestamp(result)
+    except WatchlistItem.DoesNotExist:
+        return JsonResponse({
+            'error': 'Cryptocurrency not found in watchlist'
+        }, status=404)
 
 
 def dashboard(request):

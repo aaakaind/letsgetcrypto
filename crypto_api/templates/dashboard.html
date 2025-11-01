@@ -34,6 +34,51 @@
         <div class="main-content">
             <!-- Sidebar -->
             <aside class="sidebar">
+                <!-- Search Section -->
+                <div class="control-section">
+                    <h2><i class="fas fa-search"></i> Search Crypto</h2>
+                    
+                    <div class="control-group">
+                        <label for="search-input">
+                            <i class="fas fa-search"></i> Search by Name/Symbol
+                        </label>
+                        <input type="text" id="search-input" placeholder="e.g., Bitcoin, BTC">
+                    </div>
+                    
+                    <div class="action-buttons">
+                        <button class="btn btn-primary" id="search-btn">
+                            <i class="fas fa-search"></i> Search
+                        </button>
+                    </div>
+                    
+                    <div id="search-results" style="display:none; margin-top:10px;">
+                        <label>Search Results:</label>
+                        <select id="search-results-select" size="5" style="width:100%; margin-top:5px;">
+                        </select>
+                        <button class="btn btn-success" id="select-search-result" style="margin-top:5px; width:100%;">
+                            Select
+                        </button>
+                    </div>
+                </div>
+                
+                <!-- Watchlist Section -->
+                <div class="control-section">
+                    <h2><i class="fas fa-star"></i> Watchlist</h2>
+                    
+                    <div class="action-buttons">
+                        <button class="btn btn-success" id="add-watchlist-btn">
+                            <i class="fas fa-plus"></i> Add Current to Watchlist
+                        </button>
+                        <button class="btn btn-info" id="view-watchlist-btn">
+                            <i class="fas fa-list"></i> View Watchlist
+                        </button>
+                    </div>
+                    
+                    <div id="watchlist-preview" style="margin-top:10px;">
+                        <label>Watching: <span id="watchlist-count">0</span> cryptos</label>
+                    </div>
+                </div>
+                
                 <div class="control-section">
                     <h2><i class="fas fa-cogs"></i> Controls</h2>
                     
@@ -151,6 +196,32 @@
                             <span class="stat-change" id="ml-confidence">--</span>
                         </div>
                     </div>
+                </div>
+
+                <!-- Watchlist Monitoring Section -->
+                <div class="table-container" id="watchlist-section" style="display:none;">
+                    <h2><i class="fas fa-star"></i> My Watchlist - Live Monitoring</h2>
+                    <p style="color: #666; margin-bottom: 10px;">
+                        <i class="fas fa-sync-alt"></i> Auto-refreshes every 30 seconds
+                    </p>
+                    <table class="market-table" id="watchlist-table">
+                        <thead>
+                            <tr>
+                                <th>Name</th>
+                                <th>Symbol</th>
+                                <th>Price</th>
+                                <th>24h Change</th>
+                                <th>Market Cap</th>
+                                <th>Last Updated</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="watchlist-table-body">
+                            <tr>
+                                <td colspan="7" class="empty-state">No cryptocurrencies in watchlist</td>
+                            </tr>
+                        </tbody>
+                    </table>
                 </div>
 
                 <!-- Charts Section -->
