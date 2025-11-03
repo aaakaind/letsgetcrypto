@@ -5,7 +5,6 @@ let currentCoin = 'bitcoin';
 let refreshInterval = null;
 let modelsTrained = false;
 let trainingInProgress = false;
-let requestCount = 0;
 const MAX_REQUESTS_PER_MINUTE = 30; // CoinGecko rate limit
 
 // Initialize dashboard on page load
@@ -274,19 +273,21 @@ function loadMarketOverview() {
     });
 }
 
+// Track request timestamps for proper rate limiting
+let requestTimestamps = [];
+
 function checkRateLimit() {
     const now = Date.now();
     const oneMinuteAgo = now - 60000;
     
-    // Clean old requests
-    requestCount = requestCount > 0 ? requestCount - 1 : 0;
+    // Remove requests older than 1 minute
+    requestTimestamps = requestTimestamps.filter(timestamp => timestamp > oneMinuteAgo);
     
-    if (requestCount >= MAX_REQUESTS_PER_MINUTE) {
+    if (requestTimestamps.length >= MAX_REQUESTS_PER_MINUTE) {
         return false;
     }
     
-    requestCount++;
-    setTimeout(() => requestCount--, 60000);
+    requestTimestamps.push(now);
     return true;
 }
 
@@ -436,7 +437,7 @@ function loadCryptoHistory() {
         success: function(data) {
             // Convert CoinGecko format to our format
             const prices = data.prices.map(item => ({
-                timestamp: item[0] / 1000, // Convert to seconds
+                timestamp: item[0], // Keep in milliseconds
                 price: item[1]
             }));
             updateCharts(prices);
@@ -462,7 +463,7 @@ function updateCharts(prices) {
     const rsiPeriod = 14;
     
     prices.forEach(function(point, index) {
-        const date = new Date(point.timestamp * 1000);
+        const date = new Date(point.timestamp); // Already in milliseconds
         labels.push(date.toLocaleDateString());
         priceData.push(point.price);
         
@@ -701,6 +702,12 @@ function executeTrade(action) {
     const currentPriceText = $('#current-price').text();
     const price = parseFloat(currentPriceText.replace(/[$,]/g, ''));
     
+    // Validate price
+    if (!price || isNaN(price) || price <= 0) {
+        addLog('⚠️ Unable to get current price. Please refresh data first.', 'error');
+        return;
+    }
+    
     const actionBtn = action === 'buy' ? $('#buy-btn') : $('#sell-btn');
     actionBtn.addClass('loading').prop('disabled', true);
     
@@ -713,11 +720,13 @@ function executeTrade(action) {
         if (status === 'success') {
             const cryptoAmount = (amount / price).toFixed(6);
             const fee = (amount * 0.001).toFixed(2); // 0.1% fee
-            const total = action === 'buy' ? (amount + parseFloat(fee)).toFixed(2) : (amount - parseFloat(fee)).toFixed(2);
+            const total = action === 'buy' 
+                ? (amount + parseFloat(fee)).toFixed(2) 
+                : (amount - parseFloat(fee)).toFixed(2);
             
             addLog(`✅ ${action.toUpperCase()} order executed successfully!`, 'info');
-            addLog(`📝 Bought ${cryptoAmount} ${currentCoin.toUpperCase()} at $${formatNumber(price)}`, 'info');
-            addLog(`💵 Fee: $${fee} | Total: $${total}`, 'info');
+            addLog(`📝 ${action === 'buy' ? 'Bought' : 'Sold'} ${cryptoAmount} ${currentCoin.toUpperCase()} at $${formatNumber(price)}`, 'info');
+            addLog(`💵 Fee: $${fee} | ${action === 'buy' ? 'Total cost' : 'Net received'}: $${total}`, 'info');
             
             // Add to trading history
             const tbody = $('#trading-table-body');
