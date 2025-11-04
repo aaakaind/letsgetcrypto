@@ -5,7 +5,14 @@ let currentCoin = 'bitcoin';
 let refreshInterval = null;
 let modelsTrained = false;
 let trainingInProgress = false;
+let resumeRefreshTimer = null; // Track pending auto-refresh resume timer
+
+// Configuration constants
 const MAX_REQUESTS_PER_MINUTE = 30; // CoinGecko rate limit
+const MIN_TRADE_AMOUNT = 10; // Minimum trade amount in USD
+const TRADING_FEE_RATE = 0.001; // 0.1% trading fee
+const MAX_DISPLAYED_TRADES = 10; // Maximum number of trades to show in history
+const DEMO_TRADE_SUCCESS_RATE = 0.95; // 95% success rate for demo trades
 
 // Initialize dashboard on page load
 $(document).ready(function() {
@@ -316,7 +323,19 @@ function handleApiError(xhr, error, dataType) {
             // Pause auto-refresh temporarily
             if (refreshInterval) {
                 clearInterval(refreshInterval);
-                setTimeout(startAutoRefresh, 120000); // Resume after 2 minutes
+                refreshInterval = null;
+                
+                // Clear any pending resume timer to prevent stacking
+                if (resumeRefreshTimer) {
+                    clearTimeout(resumeRefreshTimer);
+                    resumeRefreshTimer = null;
+                }
+                
+                // Set new resume timer
+                resumeRefreshTimer = setTimeout(function() {
+                    startAutoRefresh();
+                    resumeRefreshTimer = null;
+                }, 120000); // Resume after 2 minutes
             }
             
             // Auto-hide warning after 30 seconds
@@ -687,8 +706,8 @@ function executeTrade(action) {
     const testnetMode = $('#testnet-mode').is(':checked');
     
     // Validation
-    if (!amount || amount < 10) {
-        addLog('⚠️ Minimum trade amount is $10', 'error');
+    if (!amount || amount < MIN_TRADE_AMOUNT) {
+        addLog(`⚠️ Minimum trade amount is $${MIN_TRADE_AMOUNT}`, 'error');
         return;
     }
     
@@ -715,11 +734,11 @@ function executeTrade(action) {
     
     // Simulate realistic trade execution delay
     setTimeout(function() {
-        const status = Math.random() > 0.05 ? 'success' : 'failed'; // 95% success rate in demo
+        const status = Math.random() < DEMO_TRADE_SUCCESS_RATE ? 'success' : 'failed';
         
         if (status === 'success') {
             const cryptoAmount = (amount / price).toFixed(6);
-            const fee = (amount * 0.001).toFixed(2); // 0.1% fee
+            const fee = (amount * TRADING_FEE_RATE).toFixed(2);
             const total = action === 'buy' 
                 ? (amount + parseFloat(fee)).toFixed(2) 
                 : (amount - parseFloat(fee)).toFixed(2);
@@ -746,8 +765,8 @@ function executeTrade(action) {
             `);
             tbody.prepend(row);
             
-            // Keep only last 10 trades
-            if (tbody.children().length > 10) {
+            // Keep only last N trades
+            if (tbody.children().length > MAX_DISPLAYED_TRADES) {
                 tbody.children().last().remove();
             }
         } else {
