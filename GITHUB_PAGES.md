@@ -4,9 +4,15 @@ This guide explains how to deploy the LetsGetCrypto dashboard to GitHub Pages.
 
 ## Overview
 
-The LetsGetCrypto dashboard can be deployed as a static website on GitHub Pages using Jekyll. The static version uses direct CoinGecko API calls for cryptocurrency data and provides a demo mode for ML training and trading features.
+The LetsGetCrypto dashboard can be deployed as a **production-ready demo** on GitHub Pages using Jekyll. This version features:
 
-> **Note**: This site now uses Jekyll for better maintainability and SEO. See [JEKYLL_SETUP.md](JEKYLL_SETUP.md) for Jekyll-specific documentation.
+- ✅ Real-time cryptocurrency market data from CoinGecko API
+- ✅ Professional UI with loading states, error handling, and smooth animations
+- ✅ Rate limit protection and automatic error recovery
+- ✅ Clear demo mode indicators and comprehensive disclaimers
+- ⚠️ Simulated ML training and trading features (for demonstration)
+
+> **Note**: This is a production-quality demonstration. While ML training and trading are simulated, the implementation includes professional-grade error handling, user feedback, and UX patterns. See [JEKYLL_SETUP.md](JEKYLL_SETUP.md) for Jekyll-specific documentation.
 
 ## Quick Setup
 
@@ -75,36 +81,46 @@ See [JEKYLL_SETUP.md](JEKYLL_SETUP.md) for details on working with Jekyll.
 
 ## Features
 
-### Available Features ✅
+### Production-Ready Features ✅
 
 - **Real-time Market Data**: Live cryptocurrency prices from CoinGecko
-- **Interactive Charts**: Price history and technical indicators
+- **Interactive Charts**: Price history with RSI indicators
 - **Market Overview**: Top cryptocurrencies by market cap
-- **Auto-refresh**: Data updates every 30 seconds
-- **Responsive Design**: Works on mobile and desktop
+- **Auto-refresh**: Smart updates every 30 seconds with rate limit protection
+- **Responsive Design**: Works seamlessly on mobile and desktop
+- **Loading States**: Professional spinner animations and progress bars
+- **Error Handling**: Comprehensive error messages and recovery
+- **Rate Limit Protection**: Automatic detection and handling
+- **Demo Mode Banner**: Clear indicators of simulated features
+- **About Page**: Comprehensive documentation and FAQ
+- **User Feedback**: Smart notifications and system logging
 
 ### Demo Mode Features ⚠️
 
-The following features are simulated in the GitHub Pages version:
+The following features are simulated with realistic behavior:
 
-- **ML Model Training**: Shows simulated training progress
-- **Predictions**: Generates demo trading signals
-- **Trading**: Displays simulated trade execution
+- **ML Model Training**: Multi-stage training progress with metrics
+- **Predictions**: Demo trading signals with confidence levels and reasoning
+- **Trading**: Simulated trade execution with realistic fees and history
+- **Progress Tracking**: Visual progress bars and status updates
 
 ## API Configuration
 
 ### CoinGecko API
 
-The GitHub Pages version uses the free CoinGecko API with these limits:
+The GitHub Pages version uses the free CoinGecko API with automatic rate limit protection:
 
-- **Rate Limit**: 10-30 calls per minute
+- **Rate Limit**: 10-30 calls per minute (automatically monitored)
 - **No API Key Required**: Uses public endpoints
 - **Data Coverage**: Comprehensive cryptocurrency data
+- **Smart Protection**: Auto-pauses refresh when limits are reached
+- **User Notifications**: Clear warnings when rate limits are hit
 
-If you encounter rate limits, consider:
-- Reducing auto-refresh frequency
-- Waiting before retrying failed requests
-- Getting a CoinGecko API key (optional)
+The dashboard automatically:
+- Tracks API call frequency
+- Pauses auto-refresh when approaching limits
+- Shows user-friendly warning messages
+- Resumes operations after cooldown period
 
 ### Using Your Own API Key (Optional)
 

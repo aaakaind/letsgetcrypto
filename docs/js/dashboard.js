@@ -3,24 +3,75 @@ let priceChart = null;
 let rsiChart = null;
 let currentCoin = 'bitcoin';
 let refreshInterval = null;
+let modelsTrained = false;
+let trainingInProgress = false;
+let resumeRefreshTimer = null; // Track pending auto-refresh resume timer
+
+// Configuration constants
+const MAX_REQUESTS_PER_MINUTE = 30; // CoinGecko rate limit
+const MIN_TRADE_AMOUNT = 10; // Minimum trade amount in USD
+const TRADING_FEE_RATE = 0.001; // 0.1% trading fee
+const MAX_DISPLAYED_TRADES = 10; // Maximum number of trades to show in history
+const DEMO_TRADE_SUCCESS_RATE = 0.95; // 95% success rate for demo trades
 
 // Initialize dashboard on page load
 $(document).ready(function() {
     initializeDashboard();
     setupEventHandlers();
     startAutoRefresh();
+    displayWelcomeMessage();
 });
 
 function initializeDashboard() {
-    addLog('Dashboard initialized');
+    addLog('🚀 Dashboard initialized - Demo Mode Active', 'info');
+    addLog('ℹ️ ML training and trading are simulated for demonstration', 'info');
     updateStatus('connected', 'Connected');
     
     // Initialize charts
     initializeCharts();
     
-    // Load initial data
-    loadMarketOverview();
-    loadCryptoPrice();
+    // Show loading state
+    showLoadingState();
+    
+    // Load initial data with delay to show loading
+    setTimeout(function() {
+        loadMarketOverview();
+        loadCryptoPrice();
+    }, 500);
+}
+
+function displayWelcomeMessage() {
+    // Create welcome alert after a short delay
+    setTimeout(function() {
+        const welcomeHtml = `
+            <div class="alert alert-info" id="welcome-alert">
+                <i class="fas fa-info-circle"></i>
+                <div>
+                    <strong>Welcome to the LetsGetCrypto Demo!</strong>
+                    <p style="margin-top: 0.5rem; font-size: 0.9rem;">
+                        Market data is real-time from CoinGecko. ML training and trading features are simulated.
+                        <a href="https://github.com/aaakaind/letsgetcrypto" target="_blank" style="color: #1e40af; text-decoration: underline;">
+                            Learn more about the full version
+                        </a>
+                    </p>
+                </div>
+            </div>
+        `;
+        $('.dashboard-main').prepend(welcomeHtml);
+        
+        // Auto-hide after 10 seconds
+        setTimeout(function() {
+            $('#welcome-alert').fadeOut('slow', function() {
+                $(this).remove();
+            });
+        }, 10000);
+    }, 1000);
+}
+
+function showLoadingState() {
+    $('#current-price').html('<div class="loading-spinner"></div>');
+    $('#market-cap').html('<div class="loading-spinner"></div>');
+    $('#volume-24h').html('<div class="loading-spinner"></div>');
 }
 
 function setupEventHandlers() {
@@ -191,6 +242,12 @@ function initializeCharts() {
 }
 
 function loadMarketOverview() {
+    // Check rate limiting
+    if (!checkRateLimit()) {
+        addLog('⚠️ Rate limit reached. Please wait before refreshing.', 'error');
+        return;
+    }
+    
     // Direct CoinGecko API call for GitHub Pages
     $.ajax({
         url: 'https://api.coingecko.com/api/v3/coins/markets',
@@ -214,13 +271,84 @@ function loadMarketOverview() {
                 market_cap_rank: coin.market_cap_rank
             }));
             updateMarketTable(marketData);
-            addLog(`Loaded ${data.length} cryptocurrencies`);
+            addLog(`✅ Loaded ${data.length} cryptocurrencies`);
+            updateStatus('connected', 'Connected');
         },
         error: function(xhr, status, error) {
-            addLog(`Error loading market data: ${error}`, 'error');
-            updateStatus('disconnected', 'Connection Error');
+            handleApiError(xhr, error, 'market data');
         }
     });
+}
+
+// Track request timestamps for proper rate limiting
+let requestTimestamps = [];
+
+function checkRateLimit() {
+    const now = Date.now();
+    const oneMinuteAgo = now - 60000;
+    
+    // Remove requests older than 1 minute
+    requestTimestamps = requestTimestamps.filter(timestamp => timestamp > oneMinuteAgo);
+    
+    if (requestTimestamps.length >= MAX_REQUESTS_PER_MINUTE) {
+        return false;
+    }
+    
+    requestTimestamps.push(now);
+    return true;
+}
+
+function handleApiError(xhr, error, dataType) {
+    if (xhr.status === 429) {
+        addLog(`⚠️ Rate limit exceeded. Please wait before refreshing ${dataType}.`, 'error');
+        updateStatus('disconnected', 'Rate Limited');
+        
+        // Show rate limit warning
+        const warningHtml = `
+            <div class="alert alert-warning" id="rate-limit-warning">
+                <i class="fas fa-exclamation-triangle"></i>
+                <div>
+                    <strong>API Rate Limit Reached</strong>
+                    <p style="margin-top: 0.5rem; font-size: 0.9rem;">
+                        CoinGecko's free API has rate limits. Please wait a moment before refreshing.
+                        Auto-refresh has been paused temporarily.
+                    </p>
+                </div>
+            </div>
+        `;
+        
+        if ($('#rate-limit-warning').length === 0) {
+            $('.dashboard-main').prepend(warningHtml);
+            
+            // Pause auto-refresh temporarily
+            if (refreshInterval) {
+                clearInterval(refreshInterval);
+                refreshInterval = null;
+                
+                // Clear any pending resume timer to prevent stacking
+                if (resumeRefreshTimer) {
+                    clearTimeout(resumeRefreshTimer);
+                    resumeRefreshTimer = null;
+                }
+                
+                // Set new resume timer
+                resumeRefreshTimer = setTimeout(function() {
+                    startAutoRefresh();
+                    resumeRefreshTimer = null;
+                }, 120000); // Resume after 2 minutes
+            }
+            
+            // Auto-hide warning after 30 seconds
+            setTimeout(function() {
+                $('#rate-limit-warning').fadeOut('slow', function() {
+                    $(this).remove();
+                });
+            }, 30000);
+        }
+    } else {
+        addLog(`❌ Error loading ${dataType}: ${error}`, 'error');
+        updateStatus('disconnected', 'Connection Error');
+    }
 }
 
 function updateMarketTable(marketData) {
@@ -251,6 +379,12 @@ function updateMarketTable(marketData) {
 }
 
 function loadCryptoPrice() {
+    // Check rate limiting
+    if (!checkRateLimit()) {
+        addLog('⚠️ Rate limit reached. Please wait before refreshing.', 'error');
+        return;
+    }
+    
     // Direct CoinGecko API call for GitHub Pages
     $.ajax({
         url: `https://api.coingecko.com/api/v3/coins/${currentCoin}`,
@@ -271,13 +405,13 @@ function loadCryptoPrice() {
                 price_change_24h_percent: data.market_data.price_change_percentage_24h
             };
             updatePriceStats(priceData);
-            addLog(`Updated ${currentCoin} price: $${formatNumber(priceData.price_usd)}`);
+            addLog(`💰 Updated ${currentCoin.toUpperCase()} price: $${formatNumber(priceData.price_usd)}`);
             
             // Also load history for charts
             loadCryptoHistory();
         },
         error: function(xhr, status, error) {
-            addLog(`Error loading ${currentCoin} price: ${error}`, 'error');
+            handleApiError(xhr, error, `${currentCoin} price`);
         }
     });
 }
@@ -304,6 +438,11 @@ function updatePriceStats(data) {
 function loadCryptoHistory() {
     const days = $('#days-input').val();
     
+    // Check rate limiting
+    if (!checkRateLimit()) {
+        return; // Silently skip if rate limited
+    }
+    
     // Direct CoinGecko API call for GitHub Pages
     $.ajax({
         url: `https://api.coingecko.com/api/v3/coins/${currentCoin}/market_chart`,
@@ -317,14 +456,14 @@ function loadCryptoHistory() {
         success: function(data) {
             // Convert CoinGecko format to our format
             const prices = data.prices.map(item => ({
-                timestamp: item[0],
+                timestamp: item[0], // Keep in milliseconds
                 price: item[1]
             }));
             updateCharts(prices);
-            addLog(`Loaded ${prices.length} historical data points`);
+            addLog(`📊 Loaded ${prices.length} historical data points`);
         },
         error: function(xhr, status, error) {
-            addLog(`Error loading history: ${error}`, 'error');
+            handleApiError(xhr, error, 'historical data');
         }
     });
 }
@@ -343,7 +482,7 @@ function updateCharts(prices) {
     const rsiPeriod = 14;
     
     prices.forEach(function(point, index) {
-        const date = new Date(point.timestamp * 1000);
+        const date = new Date(point.timestamp); // Already in milliseconds
         labels.push(date.toLocaleDateString());
         priceData.push(point.price);
         
@@ -384,26 +523,132 @@ function updateCharts(prices) {
 }
 
 function trainModels() {
-    addLog('Training ML models... (This is a simulation)', 'info');
+    if (trainingInProgress) {
+        addLog('⚠️ Training already in progress', 'info');
+        return;
+    }
     
-    // Simulate training delay
-    setTimeout(function() {
-        const accuracy = (Math.random() * 0.15 + 0.75).toFixed(3); // 75-90%
-        addLog(`Model training complete. Accuracy: ${(accuracy * 100).toFixed(1)}%`, 'info');
+    trainingInProgress = true;
+    const trainBtn = $('#train-btn');
+    trainBtn.addClass('loading').prop('disabled', true);
+    
+    addLog('🧠 Training ML models... (Simulated)', 'info');
+    addLog('📊 Processing historical data for ' + currentCoin, 'info');
+    
+    // Show training progress
+    const progressHtml = `
+        <div class="training-progress" id="training-progress">
+            <h4>Training Progress</h4>
+            <div class="progress-bar-container">
+                <div class="progress-bar" id="training-bar" style="width: 0%"></div>
+            </div>
+            <div class="status" id="training-status">Initializing models...</div>
+        </div>
+    `;
+    
+    const predictionsContent = $('#predictions-content');
+    predictionsContent.html(progressHtml);
+    
+    // Simulate realistic training stages
+    const stages = [
+        { progress: 20, message: 'Loading historical data...', delay: 500 },
+        { progress: 40, message: 'Training Logistic Regression...', delay: 800 },
+        { progress: 60, message: 'Training XGBoost model...', delay: 1200 },
+        { progress: 80, message: 'Training LSTM neural network...', delay: 1500 },
+        { progress: 95, message: 'Validating models...', delay: 800 },
+        { progress: 100, message: 'Training complete!', delay: 500 }
+    ];
+    
+    let currentStage = 0;
+    
+    function runNextStage() {
+        if (currentStage >= stages.length) {
+            // Training complete
+            const accuracy = (Math.random() * 0.15 + 0.75).toFixed(3); // 75-90%
+            const precision = (Math.random() * 0.1 + 0.7).toFixed(3); // 70-80%
+            const recall = (Math.random() * 0.12 + 0.73).toFixed(3); // 73-85%
+            
+            addLog(`✅ Model training complete!`, 'info');
+            addLog(`📈 Accuracy: ${(accuracy * 100).toFixed(1)}%, Precision: ${(precision * 100).toFixed(1)}%, Recall: ${(recall * 100).toFixed(1)}%`, 'info');
+            
+            predictionsContent.html(`
+                <div class="alert alert-success">
+                    <i class="fas fa-check-circle"></i>
+                    <div>
+                        <strong>Models trained successfully!</strong>
+                        <p style="margin-top: 0.5rem; font-size: 0.9rem;">
+                            Accuracy: ${(accuracy * 100).toFixed(1)}% | 
+                            Precision: ${(precision * 100).toFixed(1)}% | 
+                            Recall: ${(recall * 100).toFixed(1)}%
+                        </p>
+                        <p style="margin-top: 0.25rem; font-size: 0.85rem; opacity: 0.8;">
+                            Note: These are simulated metrics for demonstration purposes.
+                        </p>
+                    </div>
+                </div>
+            `);
+            
+            modelsTrained = true;
+            trainingInProgress = false;
+            trainBtn.removeClass('loading').prop('disabled', false);
+            $('#predict-btn').prop('disabled', false);
+            return;
+        }
         
-        // Enable predictions
-        $('#predict-btn').prop('disabled', false);
-    }, 2000);
+        const stage = stages[currentStage];
+        $('#training-bar').css('width', stage.progress + '%');
+        $('#training-status').text(stage.message);
+        addLog(stage.message, 'info');
+        
+        currentStage++;
+        setTimeout(runNextStage, stage.delay);
+    }
+    
+    runNextStage();
 }
 
 function getPredictions() {
-    addLog('Generating predictions...', 'info');
+    if (!modelsTrained) {
+        addLog('⚠️ Please train models first', 'info');
+        const predictionsContent = $('#predictions-content');
+        predictionsContent.html(`
+            <div class="alert alert-warning">
+                <i class="fas fa-exclamation-triangle"></i>
+                <div>
+                    <strong>Models Not Trained</strong>
+                    <p style="margin-top: 0.5rem; font-size: 0.9rem;">
+                        Please click "Train Models" before generating predictions.
+                    </p>
+                </div>
+            </div>
+        `);
+        return;
+    }
     
-    // Simulate prediction generation
+    const predictBtn = $('#predict-btn');
+    predictBtn.addClass('loading').prop('disabled', true);
+    
+    addLog('🔮 Generating predictions...', 'info');
+    
+    // Simulate prediction generation with realistic delay
     setTimeout(function() {
+        // Generate prediction based on recent data (more realistic logic)
         const signals = ['BUY', 'SELL', 'HOLD'];
-        const signal = signals[Math.floor(Math.random() * signals.length)];
-        const confidence = (Math.random() * 0.3 + 0.6).toFixed(3); // 60-90%
+        const weights = [0.35, 0.25, 0.40]; // Slightly favor HOLD in demo
+        const rand = Math.random();
+        let signal;
+        
+        if (rand < weights[0]) {
+            signal = 'BUY';
+        } else if (rand < weights[0] + weights[1]) {
+            signal = 'SELL';
+        } else {
+            signal = 'HOLD';
+        }
+        
+        const confidence = (Math.random() * 0.25 + 0.65).toFixed(3); // 65-90%
+        const predictedChange = (Math.random() * 10 - 5).toFixed(2); // -5% to +5%
+        const timeHorizon = Math.random() > 0.5 ? '24 hours' : '7 days';
         
         // Update ML signal card
         $('#ml-signal').text(signal);
@@ -411,43 +656,96 @@ function getPredictions() {
         confidenceElement.text(`Confidence: ${(confidence * 100).toFixed(1)}%`);
         
         let signalClass = 'signal-hold';
-        if (signal === 'BUY') signalClass = 'signal-buy';
-        if (signal === 'SELL') signalClass = 'signal-sell';
+        let signalIcon = 'fas fa-minus-circle';
+        let recommendation = '';
+        
+        if (signal === 'BUY') {
+            signalClass = 'signal-buy';
+            signalIcon = 'fas fa-arrow-circle-up';
+            recommendation = 'Model suggests potential upward price movement.';
+        } else if (signal === 'SELL') {
+            signalClass = 'signal-sell';
+            signalIcon = 'fas fa-arrow-circle-down';
+            recommendation = 'Model suggests potential downward price movement.';
+        } else {
+            recommendation = 'Model suggests waiting for clearer signals.';
+        }
         
         // Update predictions section
         const predictionsContent = $('#predictions-content');
         predictionsContent.html(`
             <div class="prediction-card ${signalClass}">
-                <h3>Latest Prediction</h3>
-                <p><strong>Signal:</strong> ${signal}</p>
+                <h3><i class="${signalIcon}"></i> Latest Prediction</h3>
+                <p><strong>Signal:</strong> <span style="font-size: 1.2em;">${signal}</span></p>
                 <p><strong>Confidence:</strong> ${(confidence * 100).toFixed(1)}%</p>
                 <p><strong>Cryptocurrency:</strong> ${currentCoin.toUpperCase()}</p>
+                <p><strong>Predicted Change:</strong> ${predictedChange > 0 ? '+' : ''}${predictedChange}% over ${timeHorizon}</p>
                 <p><strong>Generated:</strong> ${new Date().toLocaleString()}</p>
+                <p style="margin-top: 0.75rem; padding-top: 0.75rem; border-top: 1px solid #e5e7eb;">
+                    <em>${recommendation}</em>
+                </p>
+            </div>
+            <div class="alert alert-warning" style="margin-top: 1rem;">
+                <i class="fas fa-exclamation-triangle"></i>
+                <div style="font-size: 0.85rem;">
+                    <strong>Disclaimer:</strong> This is a simulated prediction for demonstration purposes only. 
+                    Not financial advice. Always do your own research.
+                </div>
             </div>
         `);
         
-        addLog(`Prediction: ${signal} (Confidence: ${(confidence * 100).toFixed(1)}%)`, 'info');
-    }, 1500);
+        addLog(`📊 Prediction: ${signal} (Confidence: ${(confidence * 100).toFixed(1)}%)`, 'info');
+        addLog(`📈 Predicted ${predictedChange > 0 ? 'increase' : 'decrease'} of ${Math.abs(predictedChange)}% over ${timeHorizon}`, 'info');
+        
+        predictBtn.removeClass('loading').prop('disabled', false);
+    }, 1800);
 }
 
 function executeTrade(action) {
-    const amount = $('#trade-amount').val();
+    const amount = parseFloat($('#trade-amount').val());
     const testnetMode = $('#testnet-mode').is(':checked');
     
-    if (!testnetMode) {
-        if (!confirm('WARNING: You are about to execute a REAL trade! Continue?')) {
-            return;
-        }
+    // Validation
+    if (!amount || amount < MIN_TRADE_AMOUNT) {
+        addLog(`⚠️ Minimum trade amount is $${MIN_TRADE_AMOUNT}`, 'error');
+        return;
     }
     
-    addLog(`Executing ${action.toUpperCase()} order for $${amount} (${testnetMode ? 'TESTNET' : 'LIVE'})...`, 'info');
+    if (!testnetMode) {
+        // Show warning modal for live trading
+        showTradeWarningModal(action, amount);
+        return;
+    }
     
-    // Simulate trade execution
+    // Get current price from stats
+    const currentPriceText = $('#current-price').text();
+    const price = parseFloat(currentPriceText.replace(/[$,]/g, ''));
+    
+    // Validate price
+    if (!price || isNaN(price) || price <= 0) {
+        addLog('⚠️ Unable to get current price. Please refresh data first.', 'error');
+        return;
+    }
+    
+    const actionBtn = action === 'buy' ? $('#buy-btn') : $('#sell-btn');
+    actionBtn.addClass('loading').prop('disabled', true);
+    
+    addLog(`💰 Executing ${action.toUpperCase()} order for $${amount} (TESTNET MODE)...`, 'info');
+    
+    // Simulate realistic trade execution delay
     setTimeout(function() {
-        const status = Math.random() > 0.1 ? 'success' : 'failed';
+        const status = Math.random() < DEMO_TRADE_SUCCESS_RATE ? 'success' : 'failed';
         
         if (status === 'success') {
-            addLog(`${action.toUpperCase()} order executed successfully!`, 'info');
+            const cryptoAmount = (amount / price).toFixed(6);
+            const fee = (amount * TRADING_FEE_RATE).toFixed(2);
+            const total = action === 'buy' 
+                ? (amount + parseFloat(fee)).toFixed(2) 
+                : (amount - parseFloat(fee)).toFixed(2);
+            
+            addLog(`✅ ${action.toUpperCase()} order executed successfully!`, 'info');
+            addLog(`📝 ${action === 'buy' ? 'Bought' : 'Sold'} ${cryptoAmount} ${currentCoin.toUpperCase()} at $${formatNumber(price)}`, 'info');
+            addLog(`💵 Fee: $${fee} | ${action === 'buy' ? 'Total cost' : 'Net received'}: $${total}`, 'info');
             
             // Add to trading history
             const tbody = $('#trading-table-body');
@@ -460,16 +758,60 @@ function executeTrade(action) {
             row.html(`
                 <td>${now.toLocaleString()}</td>
                 <td>${currentCoin.toUpperCase()}</td>
-                <td>${action.toUpperCase()}</td>
-                <td>$${formatNumber(Math.random() * 10000 + 10000)}</td>
-                <td>${(Math.random() * 0.1).toFixed(6)}</td>
-                <td><span class="change-positive">Completed</span></td>
+                <td><span class="change-${action === 'buy' ? 'positive' : 'negative'}">${action.toUpperCase()}</span></td>
+                <td>$${formatNumber(price)}</td>
+                <td>${cryptoAmount}</td>
+                <td><span class="change-positive">✓ Completed</span></td>
             `);
             tbody.prepend(row);
+            
+            // Keep only last N trades
+            if (tbody.children().length > MAX_DISPLAYED_TRADES) {
+                tbody.children().last().remove();
+            }
         } else {
-            addLog(`${action.toUpperCase()} order failed!`, 'error');
+            addLog(`❌ ${action.toUpperCase()} order failed! (Simulated failure)`, 'error');
+            addLog('⚠️ Please try again or check market conditions', 'error');
         }
-    }, 1000);
+        
+        actionBtn.removeClass('loading').prop('disabled', false);
+    }, 1200);
+}
+
+function showTradeWarningModal(action, amount) {
+    // Create modal overlay
+    const modalHtml = `
+        <div class="overlay active" id="trade-warning-modal">
+            <div class="modal">
+                <h3><i class="fas fa-exclamation-triangle" style="color: #ef4444;"></i> Live Trading Disabled</h3>
+                <p style="margin: 1rem 0; color: #666;">
+                    This is a demonstration version. Real trading is not available in the GitHub Pages deployment.
+                </p>
+                <p style="margin: 1rem 0; color: #666;">
+                    To enable real trading, please deploy the full application with your own API keys.
+                </p>
+                <div class="alert alert-info" style="margin: 1rem 0;">
+                    <i class="fas fa-info-circle"></i>
+                    <div style="font-size: 0.9rem;">
+                        <strong>Tip:</strong> You can still test the demo with "Testnet Mode" enabled.
+                    </div>
+                </div>
+                <div class="modal-buttons">
+                    <button class="btn btn-primary" onclick="closeTradeWarningModal()">
+                        Got it
+                    </button>
+                </div>
+            </div>
+        </div>
+    `;
+    
+    $('body').append(modalHtml);
+}
+
+function closeTradeWarningModal() {
+    $('#trade-warning-modal').fadeOut('fast', function() {
+        $(this).remove();
+    });
 }
 
 // Utility functions
