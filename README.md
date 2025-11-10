@@ -2,6 +2,8 @@
 
 🚀 **A comprehensive cryptocurrency trading and prediction tool with machine learning, technical analysis, and automated trading capabilities.**
 
+> **📖 New to the project?** Start here: **[GETTING_STARTED.md](GETTING_STARTED.md)** - Get from clone to running in minutes!
+
 ## 🎯 Version 1.0.0 - Deployment Ready
 
 **This version is production-ready with comprehensive deployment documentation, health checks, and validation tools.**
