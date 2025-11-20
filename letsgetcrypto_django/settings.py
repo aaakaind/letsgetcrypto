@@ -198,12 +198,16 @@ CRYPTO_API_SETTINGS = {
 
 # CORS Configuration for GitHub Pages Frontend Integration
 # Allow frontend (GitHub Pages) to connect to backend API
-CORS_ALLOWED_ORIGINS = os.environ.get('CORS_ALLOWED_ORIGINS', '').split(',') if os.environ.get('CORS_ALLOWED_ORIGINS') else [
-    'http://localhost:8080',
-    'http://127.0.0.1:8080',
-    'http://localhost:4000',  # Jekyll default
-    'http://127.0.0.1:4000',
-]
+CORS_ALLOWED_ORIGINS = (
+    [origin.strip() for origin in os.environ.get('CORS_ALLOWED_ORIGINS', '').split(',') if origin.strip()]
+    if os.environ.get('CORS_ALLOWED_ORIGINS')
+    else [
+        'http://localhost:8080',
+        'http://127.0.0.1:8080',
+        'http://localhost:4000',  # Jekyll default
+        'http://127.0.0.1:4000',
+    ]
+)
 
 # For development, you can also use:
 # CORS_ALLOW_ALL_ORIGINS = DEBUG
