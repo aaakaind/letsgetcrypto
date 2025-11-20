@@ -145,7 +145,7 @@ if [ ! -f ".env" ]; then
         print_warning "Please edit .env file to add your API keys"
     else
         # Create a basic .env file
-        cat > .env << 'ENVEOF'
+        cat > .env << ENVEOF
 # LetsGetCrypto Environment Configuration
 # Add your API keys here (optional but recommended for full functionality)
 
