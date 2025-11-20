@@ -209,7 +209,9 @@ CORS_ALLOWED_ORIGINS = os.environ.get('CORS_ALLOWED_ORIGINS', '').split(',') if 
 # CORS_ALLOW_ALL_ORIGINS = DEBUG
 
 # Allow credentials (cookies, authorization headers, etc.)
-CORS_ALLOW_CREDENTIALS = True
+# WARNING: Enabling CORS_ALLOW_CREDENTIALS with a broad or untrusted CORS_ALLOWED_ORIGINS list can expose sensitive cookies and authentication headers.
+# Only set CORS_ALLOW_CREDENTIALS = True for trusted origins in development. For production, it is recommended to keep this False.
+CORS_ALLOW_CREDENTIALS = DEBUG
 
 # Allow specific methods
 CORS_ALLOW_METHODS = [
