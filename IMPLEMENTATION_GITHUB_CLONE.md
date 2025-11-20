@@ -288,7 +288,7 @@ docs/test-api.html
 1. `setup.sh` - Automated setup (236 lines)
 2. `init_ml_environment.sh` - ML initialization (325 lines)
 3. `run.sh` - Application launcher (94 lines)
-4. `validate_setup.py` - Setup validation (167 lines)
+4. `validate_setup.py` - Setup validation (153 lines)
 
 **Documentation:**
 5. `GETTING_STARTED.md` - Quick start guide
