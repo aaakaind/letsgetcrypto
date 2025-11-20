@@ -280,7 +280,7 @@ Models can be retrained through:
 1. **Desktop GUI**: Click "Train Models" button
 2. **Web Dashboard**: Use the training interface
 3. **Feedback Loop**: Automatic retraining based on performance
-4. **Manual Script**: Run `python init_ml_environment.sh`
+4. **Manual Script**: Run `./init_ml_environment.sh` or `bash init_ml_environment.sh`
 
 ## Model Files
 
