@@ -455,7 +455,6 @@ class MLModels:
             # Check for GPU availability by attempting a small test fit
             gpu_available = False
             try:
-                import numpy as np
                 # Create a minimal test dataset
                 X_test_gpu = np.array([[1, 2], [3, 4]])
                 y_test_gpu = np.array([0, 1])
@@ -463,8 +462,8 @@ class MLModels:
                 test_model.fit(X_test_gpu, y_test_gpu)
                 gpu_available = True
                 logger.info("GPU is available for XGBoost")
-            except:
-                logger.info("GPU not available, will use CPU for XGBoost")
+            except Exception as e:
+                logger.info(f"GPU not available, will use CPU for XGBoost: {type(e).__name__}")
             
             # Create model with appropriate tree_method
             if gpu_available:
