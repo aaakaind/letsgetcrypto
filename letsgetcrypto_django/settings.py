@@ -38,11 +38,13 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'corsheaders',  # CORS support for GitHub Pages frontend
     'crypto_api',  # Add our crypto API app
 ]
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
+    'corsheaders.middleware.CorsMiddleware',  # CORS middleware (must be before CommonMiddleware)
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
@@ -193,3 +195,47 @@ CRYPTO_API_SETTINGS = {
     'MAX_RETRIES': 3,
     'REQUEST_TIMEOUT': 30,
 }
+
+# CORS Configuration for GitHub Pages Frontend Integration
+# Allow frontend (GitHub Pages) to connect to backend API
+CORS_ALLOWED_ORIGINS = (
+    [origin.strip() for origin in os.environ.get('CORS_ALLOWED_ORIGINS', '').split(',') if origin.strip()]
+    if os.environ.get('CORS_ALLOWED_ORIGINS')
+    else [
+        'http://localhost:8080',
+        'http://127.0.0.1:8080',
+        'http://localhost:4000',  # Jekyll default
+        'http://127.0.0.1:4000',
+    ]
+)
+
+# For development, you can also use:
+# CORS_ALLOW_ALL_ORIGINS = DEBUG
+
+# Allow credentials (cookies, authorization headers, etc.)
+# WARNING: Enabling CORS_ALLOW_CREDENTIALS with a broad or untrusted CORS_ALLOWED_ORIGINS list can expose sensitive cookies and authentication headers.
+# Only set CORS_ALLOW_CREDENTIALS = True for trusted origins in development. For production, it is recommended to keep this False.
+CORS_ALLOW_CREDENTIALS = DEBUG
+
+# Allow specific methods
+CORS_ALLOW_METHODS = [
+    'DELETE',
+    'GET',
+    'OPTIONS',
+    'PATCH',
+    'POST',
+    'PUT',
+]
+
+# Allow specific headers
+CORS_ALLOW_HEADERS = [
+    'accept',
+    'accept-encoding',
+    'authorization',
+    'content-type',
+    'dnt',
+    'origin',
+    'user-agent',
+    'x-csrftoken',
+    'x-requested-with',
+]

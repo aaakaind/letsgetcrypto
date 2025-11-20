@@ -1,0 +1,328 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>API Integration Test - LetsGetCrypto</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 10px;
+            padding: 30px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+        }
+        
+        h1 {
+            color: #333;
+            margin-bottom: 10px;
+        }
+        
+        .subtitle {
+            color: #666;
+            margin-bottom: 30px;
+        }
+        
+        .config-section {
+            background: #f5f5f5;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+        
+        .config-section label {
+            display: block;
+            font-weight: bold;
+            margin-bottom: 8px;
+            color: #333;
+        }
+        
+        .config-section input {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 14px;
+        }
+        
+        .button-group {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 10px;
+            margin: 20px 0;
+        }
+        
+        button {
+            padding: 12px 24px;
+            background: #667eea;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: bold;
+            transition: all 0.3s;
+        }
+        
+        button:hover {
+            background: #5568d3;
+            transform: translateY(-2px);
+        }
+        
+        button:active {
+            transform: translateY(0);
+        }
+        
+        .results {
+            background: #f9f9f9;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            padding: 20px;
+            margin-top: 20px;
+            min-height: 200px;
+        }
+        
+        .results h3 {
+            color: #333;
+            margin-bottom: 15px;
+        }
+        
+        pre {
+            background: #2d2d2d;
+            color: #f8f8f2;
+            padding: 15px;
+            border-radius: 5px;
+            overflow-x: auto;
+            font-size: 13px;
+            line-height: 1.5;
+        }
+        
+        .status {
+            display: inline-block;
+            padding: 5px 12px;
+            border-radius: 3px;
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+        
+        .status.success {
+            background: #4caf50;
+            color: white;
+        }
+        
+        .status.error {
+            background: #f44336;
+            color: white;
+        }
+        
+        .status.loading {
+            background: #ff9800;
+            color: white;
+        }
+        
+        .info-box {
+            background: #e3f2fd;
+            border-left: 4px solid #2196f3;
+            padding: 15px;
+            margin: 20px 0;
+            border-radius: 4px;
+        }
+        
+        .info-box h4 {
+            color: #1976d2;
+            margin-bottom: 8px;
+        }
+        
+        .info-box p {
+            color: #555;
+            line-height: 1.6;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔌 API Integration Test</h1>
+        <p class="subtitle">Test the connection between GitHub Pages frontend and Django backend</p>
+        
+        <div class="info-box">
+            <h4>Quick Start</h4>
+            <p>
+                1. Make sure your Django backend is running: <code>python manage.py runserver</code><br>
+                2. Update the API URL below if needed<br>
+                3. Click the test buttons to verify the connection
+            </p>
+        </div>
+        
+        <div class="config-section">
+            <label for="api-url">Backend API URL:</label>
+            <input type="text" id="api-url" value="http://localhost:8000/api" placeholder="http://localhost:8000/api">
+        </div>
+        
+        <div class="button-group">
+            <button onclick="testHealth()">🏥 Test Health Check</button>
+            <button onclick="testCryptoPrice()">💰 Test Crypto Price</button>
+            <button onclick="testMarketData()">📊 Test Market Data</button>
+            <button onclick="testCORS()">🔐 Test CORS</button>
+        </div>
+        
+        <div class="results" id="results">
+            <h3>Results</h3>
+            <p style="color: #888;">Click a test button to see results...</p>
+        </div>
+    </div>
+    
+    <script>
+        function getApiUrl() {
+            return document.getElementById('api-url').value.replace(/\/$/, '');
+        }
+        
+        function showLoading() {
+            const results = document.getElementById('results');
+            results.innerHTML = '<span class="status loading">⏳ Testing...</span>';
+        }
+        
+        function showResult(success, title, data) {
+            const results = document.getElementById('results');
+            const statusClass = success ? 'success' : 'error';
+            const statusIcon = success ? '✅' : '❌';
+            
+            let html = `<span class="status ${statusClass}">${statusIcon} ${title}</span>`;
+            
+            if (data) {
+                if (typeof data === 'object') {
+                    html += `<pre>${JSON.stringify(data, null, 2)}</pre>`;
+                } else {
+                    html += `<pre>${data}</pre>`;
+                }
+            }
+            
+            results.innerHTML = html;
+        }
+        
+        async function testHealth() {
+            showLoading();
+            const apiUrl = getApiUrl();
+            
+            try {
+                const response = await fetch(`${apiUrl}/health/`);
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                }
+                
+                const data = await response.json();
+                showResult(true, 'Health Check - Success', data);
+            } catch (error) {
+                showResult(false, 'Health Check - Failed', {
+                    error: error.message,
+                    suggestion: 'Make sure Django backend is running: python manage.py runserver'
+                });
+            }
+        }
+        
+        async function testCryptoPrice() {
+            showLoading();
+            const apiUrl = getApiUrl();
+            
+            try {
+                // Try to get Bitcoin price
+                const response = await fetch(`${apiUrl}/crypto/prices/bitcoin/`);
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                }
+                
+                const data = await response.json();
+                showResult(true, 'Crypto Price - Success', data);
+            } catch (error) {
+                showResult(false, 'Crypto Price - Failed', {
+                    error: error.message,
+                    note: 'This endpoint may not exist yet. Check crypto_api/urls.py'
+                });
+            }
+        }
+        
+        async function testMarketData() {
+            showLoading();
+            const apiUrl = getApiUrl();
+            
+            try {
+                const response = await fetch(`${apiUrl}/dashboard/`);
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                }
+                
+                const data = await response.json();
+                showResult(true, 'Market Data - Success', data);
+            } catch (error) {
+                showResult(false, 'Market Data - Failed', {
+                    error: error.message,
+                    note: 'Dashboard endpoint may need configuration'
+                });
+            }
+        }
+        
+        async function testCORS() {
+            showLoading();
+            const apiUrl = getApiUrl();
+            
+            try {
+                // Make a CORS request with custom header
+                const response = await fetch(`${apiUrl}/health/`, {
+                    method: 'GET',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    credentials: 'include'  // Test credentials
+                });
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                }
+                
+                const data = await response.json();
+                
+                // Check CORS headers
+                const corsHeader = response.headers.get('Access-Control-Allow-Origin');
+                
+                showResult(true, 'CORS - Success', {
+                    status: 'CORS is properly configured',
+                    allowOrigin: corsHeader || 'Not set (may still work)',
+                    data: data
+                });
+            } catch (error) {
+                showResult(false, 'CORS - Failed', {
+                    error: error.message,
+                    suggestion: 'Install django-cors-headers and configure CORS_ALLOWED_ORIGINS in Django settings',
+                    steps: [
+                        '1. pip install django-cors-headers',
+                        "2. Add 'corsheaders' to INSTALLED_APPS",
+                        "3. Add 'corsheaders.middleware.CorsMiddleware' to MIDDLEWARE",
+                        '4. Configure CORS_ALLOWED_ORIGINS'
+                    ]
+                });
+            }
+        }
+        
+        // Auto-test health on page load
+        window.addEventListener('load', () => {
+            setTimeout(testHealth, 500);
+        });
+    </script>
+</body>
+</html>

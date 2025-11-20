@@ -2,6 +2,8 @@
 
 🚀 **A comprehensive cryptocurrency trading and prediction tool with machine learning, technical analysis, and automated trading capabilities.**
 
+> **📖 New to the project?** Start here: **[GETTING_STARTED.md](GETTING_STARTED.md)** - Get from clone to running in minutes!
+
 ## 🎯 Version 1.0.0 - Deployment Ready
 
 **This version is production-ready with comprehensive deployment documentation, health checks, and validation tools.**
@@ -26,9 +28,41 @@
 
 ## 🚀 Quick Start
 
-### ⚡ Fastest Way to Get Started
+### ⚡ One-Command Setup (From Fresh GitHub Clone)
 
-Use our interactive quick-start script:
+**The fastest way to get started:**
+
+```bash
+git clone https://github.com/aaakaind/letsgetcrypto.git
+cd letsgetcrypto
+./setup.sh
+```
+
+This automated setup script will:
+- ✅ Check Python version (3.8+ required)
+- ✅ Create virtual environment
+- ✅ Install all dependencies
+- ✅ Set up configuration files
+- ✅ Create ML model directories
+- ✅ Run database migrations
+- ✅ Optionally train initial ML models
+
+Then run the application:
+
+```bash
+./run.sh
+```
+
+Choose from:
+- 🌐 **Web Dashboard** - Modern browser interface at http://localhost:8000
+- 🖥️ **Desktop GUI** - Full-featured PyQt5 application
+- 📊 **Both** - Run web and desktop together
+
+📖 **Detailed Guide**: See [GITHUB_CLONE_GUIDE.md](GITHUB_CLONE_GUIDE.md) for complete setup instructions
+
+### 🎯 Interactive Deployment Menu
+
+For deployment options, use the quick-start script:
 
 ```bash
 ./quick-start.sh
@@ -36,7 +70,7 @@ Use our interactive quick-start script:
 
 This script guides you through:
 - 🐳 Docker Compose (local development)
-- ☁️  AWS Elastic Beanstalk (simple cloud)
+- ☁️ AWS Elastic Beanstalk (simple cloud)
 - 🚀 AWS ECS Fargate (production cloud)
 - 📄 GitHub Pages (static demo)
 - 🧪 Deployment validation
@@ -50,6 +84,26 @@ This script guides you through:
 
 See [GITHUB_PAGES.md](GITHUB_PAGES.md) for setup instructions and [JEKYLL_SETUP.md](JEKYLL_SETUP.md) for Jekyll customization.
 
+### 🧠 Initialize ML Learning Environment
+
+Set up the machine learning environment with pre-trained models:
+
+```bash
+./init_ml_environment.sh
+```
+
+This creates:
+- Model storage directories
+- Sample training data
+- Pre-trained models (Logistic Regression, XGBoost)
+- Feature scalers and preprocessors
+
+The ML environment supports:
+- Automatic model training with real cryptocurrency data
+- Feedback loop for continuous learning
+- Multiple model types (LSTM, XGBoost, Logistic Regression)
+- Ensemble predictions for better accuracy
+
 ### ☁️ Deploy to AWS (Production)
 
 **Want to run in the cloud?** See [QUICK_DEPLOY.md](QUICK_DEPLOY.md) for the fastest way to deploy to AWS.
@@ -59,7 +113,9 @@ See [GITHUB_PAGES.md](GITHUB_PAGES.md) for setup instructions and [JEKYLL_SETUP.
 # Upload the generated package to AWS Elastic Beanstalk or ECS
 ```
 
-### Option 1: Web Dashboard (Recommended for Local Development)
+### Manual Setup (Advanced Users)
+
+#### Option 1: Web Dashboard (Recommended for Local Development)
 
 1. **Install Dependencies**:
 ```bash
@@ -76,7 +132,7 @@ python manage.py runserver
    - Open browser to `http://localhost:8000/`
    - See [DASHBOARD_GUIDE.md](DASHBOARD_GUIDE.md) for detailed usage
 
-### Option 2: Desktop GUI
+#### Option 2: Desktop GUI
 
 1. **Install Dependencies**:
 ```bash
@@ -90,8 +146,6 @@ export ANTHROPIC_API_KEY="your-api-key-here"
 
 3. **Run the Application**:
 ```bash
-python run.py
-# or directly:
 python main.py
 ```
 
@@ -137,22 +191,18 @@ See **[FEEDBACK_LOOP.md](FEEDBACK_LOOP.md)** for detailed documentation.
 
 ## 📚 Documentation
 
-### Quick Start & Deployment
-- **[🚀 Deployment Guide](DEPLOYMENT_GUIDE.md)**: **NEW!** Complete production deployment guide
-- **[✅ Release Checklist](RELEASE_CHECKLIST.md)**: **NEW!** Pre-deployment validation checklist
-- **[Complete User Guide](README_APP.md)**: Detailed features and usage
-- **[Claude AI Setup Guide](CLAUDE_SETUP.md)**: Configure AI-powered insights
-- **[Prompt Caching Guide](PROMPT_CACHING.md)**: Infinite context window with 90% cost reduction (NEW!)
-- **[Feedback Loop Guide](FEEDBACK_LOOP.md)**: Automated training and continuous learning
-### Getting Started
-- **[GitHub Pages Setup](GITHUB_PAGES.md)**: Free static dashboard deployment ⭐ NEW
+### Quick Start & Setup
+- **[⚡ GitHub Clone Guide](GITHUB_CLONE_GUIDE.md)**: **NEW!** Complete guide from clone to running app ⭐
+- **[🚀 Deployment Guide](DEPLOYMENT_GUIDE.md)**: Complete production deployment guide
+- **[✅ Release Checklist](RELEASE_CHECKLIST.md)**: Pre-deployment validation checklist
+- **[GitHub Pages Setup](GITHUB_PAGES.md)**: Free static dashboard deployment
 - **[Quick Deploy to AWS](QUICK_DEPLOY.md)**: Fastest way to deploy to AWS (5 minutes)
-- **[GitHub Pages Setup](GITHUB_PAGES.md)**: Free static dashboard deployment ⭐
 
 ### Getting Started
 - **[Web Dashboard Guide](DASHBOARD_GUIDE.md)**: Complete guide to using the web interface
 - **[Complete User Guide](README_APP.md)**: Detailed features and usage for desktop GUI
 - **[Claude AI Setup Guide](CLAUDE_SETUP.md)**: Configure AI-powered insights
+- **[Prompt Caching Guide](PROMPT_CACHING.md)**: Infinite context window with 90% cost reduction
 - **[Feedback Loop Guide](FEEDBACK_LOOP.md)**: Automated training and continuous learning
 
 ### Advanced Features
@@ -161,7 +211,6 @@ See **[FEEDBACK_LOOP.md](FEEDBACK_LOOP.md)** for detailed documentation.
 - **[Claude API Setup](CLAUDE_API_SETUP.md)**: Configure Anthropic Claude API key
 
 ### Production Deployment
-- **[🚀 Deployment Guide](DEPLOYMENT_GUIDE.md)**: Complete production deployment guide ⭐ **NEW**
 - **[AWS Packaging Guide](PACKAGING_GUIDE.md)**: Create deployable packages for AWS
 - **[AWS Deployment Guide](AWS_DEPLOYMENT.md)**: Production deployment to AWS
 - **[CI/CD Pipeline Guide](CICD_GUIDE.md)**: Automated builds and deployments with AWS CodeBuild
