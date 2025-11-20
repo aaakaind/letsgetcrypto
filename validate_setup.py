@@ -6,7 +6,6 @@ Tests that all components are properly configured for running from GitHub clone
 
 import sys
 import os
-import subprocess
 from pathlib import Path
 
 # Colors for output
