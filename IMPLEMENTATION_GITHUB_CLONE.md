@@ -285,9 +285,9 @@ docs/test-api.html
 ### New Files (10 total)
 
 **Scripts:**
-1. `setup.sh` - Automated setup (226 lines)
-2. `init_ml_environment.sh` - ML initialization (292 lines)
-3. `run.sh` - Application launcher (80 lines)
+1. `setup.sh` - Automated setup (236 lines)
+2. `init_ml_environment.sh` - ML initialization (325 lines)
+3. `run.sh` - Application launcher (94 lines)
 4. `validate_setup.py` - Setup validation (167 lines)
 
 **Documentation:**
