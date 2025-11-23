@@ -319,7 +319,7 @@ class TechnicalIndicators:
             if 'volume' in df.columns:
                 # Simple moving average of volume (ta.volume.volume_sma doesn't exist, use pandas rolling)
                 df['volume_sma'] = df['volume'].rolling(window=20).mean()
-                # VWAP requires high, low, close, volume - use price as proxy for all price columns
+                # VWAP approximation using single price point (CoinGecko data lacks OHLC: high, low, close)
                 df['vwap'] = ta.volume.volume_weighted_average_price(df['price'], df['price'], df['price'], df['volume'], window=14)
             
             # Price change features
