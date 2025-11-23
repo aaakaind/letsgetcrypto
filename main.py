@@ -317,8 +317,10 @@ class TechnicalIndicators:
             
             # Volume indicators (if volume data available)
             if 'volume' in df.columns:
-                df['volume_sma'] = ta.volume.volume_sma(df['price'], df['volume'], window=20)
-                df['vwap'] = ta.volume.volume_weighted_average_price(df['price'], df['price'], df['volume'], df['volume'], window=14)
+                # Simple moving average of volume (ta.volume.volume_sma doesn't exist, use pandas rolling)
+                df['volume_sma'] = df['volume'].rolling(window=20).mean()
+                # VWAP approximation using single price point (CoinGecko data lacks OHLC: high, low, close)
+                df['vwap'] = ta.volume.volume_weighted_average_price(df['price'], df['price'], df['price'], df['volume'], window=14)
             
             # Price change features
             df['price_change'] = df['price'].pct_change()
@@ -450,9 +452,21 @@ class MLModels:
             # Split data
             X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
             
-            # Check for GPU availability
+            # Check for GPU availability by attempting a small test fit
+            gpu_available = False
             try:
-                # Try GPU training
+                # Create a minimal test dataset
+                X_test_gpu = np.array([[1, 2], [3, 4]])
+                y_test_gpu = np.array([0, 1])
+                test_model = xgb.XGBClassifier(tree_method='gpu_hist', gpu_id=0, n_estimators=1)
+                test_model.fit(X_test_gpu, y_test_gpu)
+                gpu_available = True
+                logger.info("GPU is available for XGBoost")
+            except Exception as e:
+                logger.info(f"GPU not available, will use CPU for XGBoost: {type(e).__name__}")
+            
+            # Create model with appropriate tree_method
+            if gpu_available:
                 model = xgb.XGBClassifier(
                     tree_method='gpu_hist',
                     gpu_id=0,
@@ -462,8 +476,7 @@ class MLModels:
                     random_state=42
                 )
                 logger.info("Using GPU acceleration for XGBoost")
-            except:
-                # Fallback to CPU
+            else:
                 model = xgb.XGBClassifier(
                     n_estimators=100,
                     max_depth=6,
