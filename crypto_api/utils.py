@@ -269,8 +269,8 @@ def validate_symbol(symbol: str) -> str:
     if len(symbol) < 1 or len(symbol) > 20:
         raise ValueError("symbol must be between 1 and 20 characters")
     
-    # Only allow letters and numbers
-    if not symbol.replace('-', '').isalnum():
+    # Only allow letters, numbers, and hyphens
+    if not all(c.isalnum() or c == '-' for c in symbol):
         raise ValueError("symbol can only contain alphanumeric characters and hyphens")
     
     return symbol.upper()
@@ -332,7 +332,7 @@ def validate_decimal(value: Any, name: str = "value") -> Decimal:
 
 def sanitize_string(value: str, max_length: int = 1000) -> str:
     """
-    Sanitize string input
+    Sanitize string input to prevent XSS attacks
     
     Args:
         value: String to sanitize
@@ -346,6 +346,12 @@ def sanitize_string(value: str, max_length: int = 1000) -> str:
     
     # Remove null bytes and control characters
     sanitized = ''.join(c for c in value if c.isprintable() or c.isspace())
+    
+    # Remove potentially dangerous HTML/script characters for basic XSS prevention
+    # Note: For full HTML context, use proper escaping libraries like html.escape()
+    dangerous_chars = ['<', '>', '"', "'", '`']
+    for char in dangerous_chars:
+        sanitized = sanitized.replace(char, '')
     
     # Trim to max length
     return sanitized[:max_length].strip()

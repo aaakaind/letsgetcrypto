@@ -105,7 +105,12 @@ def test_validation():
     
     # Test string sanitization
     sanitized = sanitize_string('Hello <script>alert("xss")</script> World')
-    print(f"✓ Sanitized string: {sanitized}")
+    expected = 'Hello scriptalert(xss)/script World'  # Dangerous chars removed
+    if sanitized == expected:
+        print(f"✓ Sanitized string: {sanitized}")
+    else:
+        print(f"✗ Sanitization failed. Expected: {expected}, Got: {sanitized}")
+        return False
     
     return True
 
