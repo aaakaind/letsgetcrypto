@@ -12,7 +12,12 @@ from datetime import datetime
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Tuple, Union
 
-import numpy as np
+try:
+    import numpy as np
+    NUMPY_AVAILABLE = True
+except ImportError:
+    np = None
+    NUMPY_AVAILABLE = False
 
 logger = logging.getLogger(__name__)
 
@@ -108,9 +113,17 @@ class ModelManager:
         """Get path for model file"""
         return self.models_dir / f"{model_type}_{version}{extension}"
     
-    def _calculate_data_hash(self, data: np.ndarray) -> str:
+    def _calculate_data_hash(self, data: Any) -> str:
         """Calculate hash of training data for reproducibility"""
-        return hashlib.sha256(data.tobytes()).hexdigest()[:16]
+        if not NUMPY_AVAILABLE:
+            logger.warning("NumPy not available, cannot calculate data hash")
+            return "unavailable"
+        
+        if hasattr(data, 'tobytes'):
+            return hashlib.sha256(data.tobytes()).hexdigest()[:16]
+        else:
+            # Fallback for non-numpy data
+            return hashlib.sha256(str(data).encode()).hexdigest()[:16]
     
     def save_model(self,
                    model: Any,
@@ -118,7 +131,7 @@ class ModelManager:
                    version: Optional[str] = None,
                    metrics: Optional[Dict[str, float]] = None,
                    hyperparameters: Optional[Dict[str, Any]] = None,
-                   training_data: Optional[np.ndarray] = None) -> str:
+                   training_data: Optional[Any] = None) -> str:
         """
         Save model with versioning and metadata
         
@@ -128,7 +141,7 @@ class ModelManager:
             version: Version string (auto-generated if not provided)
             metrics: Performance metrics
             hyperparameters: Model hyperparameters
-            training_data: Training data for hash calculation
+            training_data: Training data for hash calculation (numpy array or other)
         
         Returns:
             Version string
