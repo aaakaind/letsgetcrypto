@@ -218,8 +218,12 @@ class ModelManager:
                 try:
                     if extension == '.h5':
                         # TensorFlow/Keras model
-                        from tensorflow import keras
-                        model = keras.models.load_model(str(model_path))
+                        try:
+                            from tensorflow import keras
+                            model = keras.models.load_model(str(model_path))
+                        except ImportError:
+                            logger.error("TensorFlow not available, cannot load HDF5 model")
+                            continue
                     else:
                         # Pickle model
                         with open(model_path, 'rb') as f:

@@ -1,7 +1,6 @@
 import json as json_lib
 import logging
 import platform
-import psutil
 import time
 from decimal import Decimal
 from functools import wraps
@@ -341,8 +340,7 @@ def liveness_check(request: HttpRequest) -> JsonResponse:
     Simple check to verify the application is running
     """
     return json_response_with_timestamp({
-        'status': 'alive',
-        'uptime': int(time.time())  # Could track actual uptime
+        'status': 'alive'
     })
 
 
@@ -698,7 +696,7 @@ def add_to_watchlist(request: HttpRequest) -> JsonResponse:
     
     # Check if already in watchlist
     if WatchlistItem.objects.filter(coin_id=coin_id).exists():
-        raise IntegrityError(f'{coin_name} is already in your watchlist')
+        raise ValidationError(f'{coin_name} is already in your watchlist')
     
     # Get current price and metadata
     current_price = None

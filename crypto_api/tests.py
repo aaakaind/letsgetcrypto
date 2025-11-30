@@ -166,7 +166,7 @@ class WatchlistViewTest(TestCase):
             content_type='application/json'
         )
         
-        self.assertEqual(response.status_code, 409)
+        self.assertEqual(response.status_code, 400)  # ValidationError returns 400
     
     def test_remove_from_watchlist(self):
         """Test remove from watchlist endpoint"""

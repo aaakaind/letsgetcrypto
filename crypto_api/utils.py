@@ -186,7 +186,6 @@ def rate_limit(max_requests: int = 60, window_seconds: int = 60) -> Callable:
             client_ip = get_client_ip(request)
             
             if not _rate_limiter.is_allowed(client_ip, max_requests, window_seconds):
-                remaining = _rate_limiter.get_remaining(client_ip, max_requests, window_seconds)
                 logger.warning(f"Rate limit exceeded for {client_ip}")
                 
                 response = JsonResponse({
@@ -196,7 +195,7 @@ def rate_limit(max_requests: int = 60, window_seconds: int = 60) -> Callable:
                 }, status=429)
                 
                 response['X-RateLimit-Limit'] = str(max_requests)
-                response['X-RateLimit-Remaining'] = str(remaining)
+                response['X-RateLimit-Remaining'] = '0'
                 response['Retry-After'] = str(window_seconds)
                 
                 return response
