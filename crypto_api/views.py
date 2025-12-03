@@ -217,16 +217,11 @@ def health_check(request: HttpRequest) -> JsonResponse:
         try:
             with connection.cursor() as cursor:
                 cursor.execute("SELECT 1")
-                result = cursor.fetchone()
-                if result and result[0] == 1:
-                    status['components']['database'] = {
-                        'status': 'ok',
-                        'vendor': connection.vendor,
-                        'response_time_ms': 0  # Could measure actual time
-                    }
-                else:
-                    status['components']['database'] = {'status': 'error'}
-                    status['status'] = 'unhealthy'
+            status['components']['database'] = {
+                'status': 'ok',
+                'vendor': connection.vendor,
+                'response_time_ms': 0  # Could measure actual time
+            }
         except DatabaseError as e:
             logger.error(f"Database health check failed: {e}")
             status['components']['database'] = {
