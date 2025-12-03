@@ -67,10 +67,6 @@ class WatchlistItemAdmin(admin.ModelAdmin):
     
     ordering: List[str] = ['-added_at']
     
-    def get_queryset(self, request: HttpRequest) -> QuerySet:
-        """Optimize queryset with select_related if needed"""
-        qs = super().get_queryset(request)
-        return qs
     
     actions: List[str] = ['mark_as_favorite', 'unmark_as_favorite', 'enable_alerts', 'disable_alerts']
     
