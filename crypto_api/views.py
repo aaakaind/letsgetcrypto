@@ -1,6 +1,5 @@
 import json as json_lib
 import logging
-import platform
 import time
 from decimal import Decimal
 from functools import wraps
