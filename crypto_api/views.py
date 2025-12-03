@@ -717,7 +717,7 @@ def add_to_watchlist(request: HttpRequest) -> JsonResponse:
         
         if coin_id in price_data:
             coin_data = price_data[coin_id]
-            current_price = Decimal(str(coin_data.get('usd', 0)))
+            current_price = Decimal(str(coin_data['usd'])) if coin_data.get('usd') is not None else None
             market_cap = Decimal(str(coin_data.get('usd_market_cap', 0))) if coin_data.get('usd_market_cap') else None
             volume_24h = Decimal(str(coin_data.get('usd_24h_vol', 0))) if coin_data.get('usd_24h_vol') else None
             price_change_24h = Decimal(str(coin_data.get('usd_24h_change', 0))) if coin_data.get('usd_24h_change') else None
