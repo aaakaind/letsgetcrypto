@@ -348,7 +348,9 @@ def sanitize_string(value: str, max_length: int = 1000) -> str:
     sanitized = ''.join(c for c in value if c.isprintable() or c.isspace())
     
     # Remove potentially dangerous HTML/script characters for basic XSS prevention
-    # Note: For full HTML context, use proper escaping libraries like html.escape()
+    # Note: This function removes certain dangerous characters for basic XSS prevention in non-HTML contexts.
+    #       It is NOT a substitute for proper escaping when rendering user input in HTML.
+    #       Use html.escape() or similar libraries when displaying user input in HTML templates.
     dangerous_chars = ['<', '>', '"', "'", '`']
     for char in dangerous_chars:
         sanitized = sanitized.replace(char, '')
