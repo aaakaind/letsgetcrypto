@@ -113,11 +113,17 @@ class ModelManager:
         """Get path for model file"""
         return self.models_dir / f"{model_type}_{version}{extension}"
     
-    def _calculate_data_hash(self, data: Any) -> str:
-        """Calculate hash of training data for reproducibility"""
+    def _calculate_data_hash(self, data: Any) -> Optional[str]:
+        """
+        Calculate hash of training data for reproducibility.
+        
+        Returns:
+            str: 16-character hash string if hash can be computed.
+            None: If NumPy is not available and hash cannot be computed.
+        """
         if not NUMPY_AVAILABLE:
             logger.warning("NumPy not available, cannot calculate data hash")
-            return "unavailable"
+            return None
         
         if hasattr(data, 'tobytes'):
             return hashlib.sha256(data.tobytes()).hexdigest()[:16]
