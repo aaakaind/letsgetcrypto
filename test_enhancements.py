@@ -15,7 +15,7 @@ from decimal import Decimal
 from crypto_api.models import WatchlistItem
 from crypto_api.utils import (
     validate_coin_id, validate_symbol, validate_positive_integer,
-    validate_decimal, sanitize_string, InMemoryCache, RateLimiter
+    validate_decimal, remove_special_chars, InMemoryCache, RateLimiter
 )
 from crypto_api.config_validator import ConfigValidator, validate_crypto_api_settings
 from crypto_api.model_manager import ModelManager, ModelVersion
@@ -104,7 +104,7 @@ def test_validation():
         return False
     
     # Test string sanitization
-    sanitized = sanitize_string('Hello <script>alert("xss")</script> World')
+    sanitized = remove_special_chars('Hello <script>alert("xss")</script> World')
     expected = 'Hello scriptalert(xss)/script World'  # Dangerous chars removed
     if sanitized == expected:
         print(f"✓ Sanitized string: {sanitized}")

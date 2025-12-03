@@ -21,7 +21,7 @@ from requests.exceptions import (
 from .models import WatchlistItem
 from .utils import (
     cached, rate_limit, validate_coin_id, validate_symbol,
-    validate_positive_integer, sanitize_string, json_response_with_timestamp
+    validate_positive_integer, remove_special_chars, json_response_with_timestamp
 )
 
 logger = logging.getLogger(__name__)
@@ -533,7 +533,7 @@ def search_crypto(request: HttpRequest) -> JsonResponse:
         raise ValidationError('Query must be at most 100 characters')
     
     # Sanitize query
-    query = sanitize_string(query, max_length=100)
+    query = remove_special_chars(query, max_length=100)
     
     # Use CoinGecko's search endpoint
     coingecko_url = f"{settings.CRYPTO_API_SETTINGS['COINGECKO_API_URL']}/search"
@@ -680,14 +680,14 @@ def add_to_watchlist(request: HttpRequest) -> JsonResponse:
     # Validate and sanitize inputs
     coin_id = validate_coin_id(coin_id)
     coin_symbol = validate_symbol(coin_symbol)
-    coin_name = sanitize_string(coin_name, max_length=200)
+    coin_name = remove_special_chars(coin_name, max_length=200)
     
     # Optional fields
     is_favorite = data.get('is_favorite', False)
     alert_enabled = data.get('alert_enabled', False)
-    description = sanitize_string(data.get('description', ''), max_length=5000)
-    website_url = sanitize_string(data.get('website_url', ''), max_length=500)
-    image_url = sanitize_string(data.get('image_url', ''), max_length=500)
+    description = remove_special_chars(data.get('description', ''), max_length=5000)
+    website_url = remove_special_chars(data.get('website_url', ''), max_length=500)
+    image_url = remove_special_chars(data.get('image_url', ''), max_length=500)
     
     # Check if already in watchlist
     if WatchlistItem.objects.filter(coin_id=coin_id).exists():
@@ -836,7 +836,7 @@ def update_watchlist_item(request: HttpRequest, coin_id: str) -> JsonResponse:
             item.alert_price_threshold = None
     
     if 'description' in data:
-        item.description = sanitize_string(data['description'], max_length=5000)
+        item.description = remove_special_chars(data['description'], max_length=5000)
     
     item.save()
     

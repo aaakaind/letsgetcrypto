@@ -330,33 +330,48 @@ def validate_decimal(value: Any, name: str = "value") -> Decimal:
         raise ValueError(f"{name} must be a valid decimal number")
 
 
-def sanitize_string(value: str, max_length: int = 1000) -> str:
+def remove_special_chars(value: str, max_length: int = 1000) -> str:
     """
-    Sanitize string input to prevent XSS attacks
+    Remove special characters from string input for basic sanitization.
+    
+    WARNING: This function only removes certain special characters (<, >, ", ', `) 
+    and is NOT sufficient for XSS prevention in HTML contexts. For HTML output,
+    always use Django's template auto-escaping or html.escape().
+    
+    This function is intended for:
+    - Cleaning non-HTML text data (e.g., database fields, JSON responses)
+    - Removing characters that might cause issues in certain contexts
+    - Basic input cleaning before further processing
+    
+    For HTML rendering, use:
+    - Django template auto-escaping (enabled by default)
+    - django.utils.html.escape() for manual escaping
+    - django.utils.html.strip_tags() to remove HTML tags
     
     Args:
-        value: String to sanitize
+        value: String to clean
         max_length: Maximum allowed length
     
     Returns:
-        Sanitized string
+        Cleaned string with special characters removed
     """
     if not isinstance(value, str):
         return ""
     
     # Remove null bytes and control characters
-    sanitized = ''.join(c for c in value if c.isprintable() or c.isspace())
+    cleaned = ''.join(c for c in value if c.isprintable() or c.isspace())
     
-    # Remove potentially dangerous HTML/script characters for basic XSS prevention
-    # Note: This function removes certain dangerous characters for basic XSS prevention in non-HTML contexts.
-    #       It is NOT a substitute for proper escaping when rendering user input in HTML.
-    #       Use html.escape() or similar libraries when displaying user input in HTML templates.
-    dangerous_chars = ['<', '>', '"', "'", '`']
-    for char in dangerous_chars:
-        sanitized = sanitized.replace(char, '')
+    # Remove special characters that may cause issues in certain contexts
+    special_chars = ['<', '>', '"', "'", '`']
+    for char in special_chars:
+        cleaned = cleaned.replace(char, '')
     
     # Trim to max length
-    return sanitized[:max_length].strip()
+    return cleaned[:max_length].strip()
+
+
+# Alias for backward compatibility
+sanitize_string = remove_special_chars
 
 
 # ========== Helper Functions ==========
