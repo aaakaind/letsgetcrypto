@@ -259,6 +259,7 @@ def health_check(request: HttpRequest) -> JsonResponse:
         
         # Add system metrics if psutil is available
         try:
+            import platform
             import psutil
             status['system'] = {
                 'cpu_percent': psutil.cpu_percent(interval=0.1),
