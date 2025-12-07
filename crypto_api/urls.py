@@ -22,4 +22,5 @@ urlpatterns = [
     path('watchlist/', views.get_watchlist, name='get_watchlist'),
     path('watchlist/add/', views.add_to_watchlist, name='add_to_watchlist'),
     path('watchlist/remove/<str:coin_id>/', views.remove_from_watchlist, name='remove_from_watchlist'),
+    path('watchlist/update/<str:coin_id>/', views.update_watchlist_item, name='update_watchlist_item'),
 ]
