@@ -61,19 +61,24 @@ echo "   → Full production deployment"
 echo "   → Best for: Production, scalability"
 echo "   → Time: 15 minutes | Cost: ~\$50-100/month"
 echo ""
-echo "4) 📄 GitHub Pages (Static Dashboard)"
+echo "4) ☁️  GCP Cloud Run (Serverless Production)"
+echo "   → Serverless cloud deployment"
+echo "   → Best for: Production, auto-scaling, pay-per-use"
+echo "   → Time: 10 minutes | Cost: ~\$20-40/month"
+echo ""
+echo "5) 📄 GitHub Pages (Static Dashboard)"
 echo "   → Free static hosting"
 echo "   → Best for: Demo, documentation"
 echo "   → Time: 5 minutes | Cost: Free"
 echo ""
-echo "5) 🧪 Validate Deployment (Run Checks)"
+echo "6) 🧪 Validate Deployment (Run Checks)"
 echo "   → Check if ready for deployment"
 echo ""
-echo "6) 📚 View Documentation"
+echo "7) 📚 View Documentation"
 echo "   → Read deployment guides"
 echo ""
 
-choice=$(prompt_choice "Enter your choice (1-6):")
+choice=$(prompt_choice "Enter your choice (1-7):")
 
 case $choice in
     1)
@@ -159,6 +164,50 @@ case $choice in
         ;;
         
     4)
+        print_section "☁️  GCP Cloud Run Deployment"
+        
+        echo "Prerequisites check..."
+        if ! command -v gcloud &> /dev/null; then
+            echo -e "${YELLOW}⚠️  gcloud CLI not found.${NC}"
+            echo "Install from: https://cloud.google.com/sdk/docs/install"
+            exit 1
+        fi
+        
+        if ! command -v docker &> /dev/null; then
+            echo -e "${YELLOW}⚠️  Docker not found. Please install it first.${NC}"
+            exit 1
+        fi
+        
+        echo "✅ gcloud CLI and Docker found"
+        echo ""
+        
+        # Check if user has set GCP project
+        GCP_PROJECT=$(gcloud config get-value project 2>/dev/null)
+        if [ -z "$GCP_PROJECT" ]; then
+            echo -e "${YELLOW}⚠️  GCP project not set.${NC}"
+            echo "Run: gcloud config set project YOUR_PROJECT_ID"
+            exit 1
+        fi
+        
+        echo "Using GCP Project: $GCP_PROJECT"
+        echo ""
+        
+        run_validation=$(prompt_choice "Run validation checks first? (y/n)")
+        if [[ $run_validation == "y" ]]; then
+            ./validate-deployment.sh
+        fi
+        
+        echo ""
+        echo "Starting GCP deployment..."
+        cd gcp
+        ./deploy-gcp.sh
+        cd ..
+        
+        echo ""
+        echo -e "${GREEN}✅ Check GCP console for deployment status${NC}"
+        ;;
+        
+    5)
         print_section "📄 GitHub Pages Deployment"
         
         echo "GitHub Pages setup:"
@@ -176,7 +225,7 @@ case $choice in
         echo "See GITHUB_PAGES.md for detailed instructions"
         ;;
         
-    5)
+    6)
         print_section "🧪 Validation Checks"
         
         echo "Running validation script..."
@@ -193,7 +242,7 @@ case $choice in
         echo "  cat RELEASE_CHECKLIST.md"
         ;;
         
-    6)
+    7)
         print_section "📚 Documentation"
         
         echo "Available documentation:"
@@ -202,6 +251,7 @@ case $choice in
         echo "✅ RELEASE_CHECKLIST.md - Pre-deployment checklist"
         echo "📦 QUICK_DEPLOY.md - Quick deployment guide"
         echo "☁️  AWS_DEPLOYMENT.md - AWS deployment details"
+        echo "☁️  GCP_DEPLOYMENT.md - Google Cloud deployment details"
         echo "🔄 CICD_GUIDE.md - CI/CD pipeline setup"
         echo "📄 GITHUB_PAGES.md - GitHub Pages setup"
         echo "📖 README.md - Project overview"

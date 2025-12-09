@@ -23,8 +23,8 @@
 - **📄 GitHub Pages**: Static dashboard deployment with free hosting
 - **🛡️ Risk Management**: Position sizing, daily limits, comprehensive error handling
 - **🔌 MCP Server**: Model Context Protocol server for AI assistant integration
-- **☁️ AWS Deployment**: Production-ready deployment to AWS with ECS and RDS
-- **🔄 CI/CD Pipeline**: Automated builds and deployments with AWS CodeBuild and CodePipeline
+- **☁️ Cloud Deployment**: Production-ready deployment to AWS (ECS/RDS) or GCP (Cloud Run/Cloud SQL)
+- **🔄 CI/CD Pipeline**: Automated builds and deployments with AWS CodeBuild/CodePipeline or GCP Cloud Build
 
 ## 🚀 Quick Start
 
@@ -104,14 +104,24 @@ The ML environment supports:
 - Multiple model types (LSTM, XGBoost, Logistic Regression)
 - Ensemble predictions for better accuracy
 
-### ☁️ Deploy to AWS (Production)
+### ☁️ Deploy to Cloud (Production)
 
-**Want to run in the cloud?** See [QUICK_DEPLOY.md](QUICK_DEPLOY.md) for the fastest way to deploy to AWS.
+**Want to run in the cloud?** Choose your preferred cloud provider:
 
+**AWS Deployment:**
 ```bash
 ./package-for-aws.sh 1.0.0
-# Upload the generated package to AWS Elastic Beanstalk or ECS
+# See AWS_DEPLOYMENT.md for details
 ```
+
+**Google Cloud Deployment:**
+```bash
+cd gcp
+./deploy-gcp.sh
+# See GCP_DEPLOYMENT.md for details
+```
+
+See [QUICK_DEPLOY.md](QUICK_DEPLOY.md) for the fastest way to deploy to AWS or [GCP_DEPLOYMENT.md](GCP_DEPLOYMENT.md) for Google Cloud Platform.
 
 ### Manual Setup (Advanced Users)
 

@@ -1,0 +1,66 @@
+# Google App Engine configuration for LetsGetCrypto
+# Alternative to Cloud Run deployment
+# Use this for simpler deployment with less configuration
+
+runtime: python311
+env: standard
+entrypoint: gunicorn -b :$PORT letsgetcrypto_django.wsgi:application
+
+# Instance class (F1 is free tier, F2/F4 for more resources)
+instance_class: F2
+
+# Automatic scaling configuration
+automatic_scaling:
+  target_cpu_utilization: 0.65
+  target_throughput_utilization: 0.65
+  min_instances: 0
+  max_instances: 10
+  min_idle_instances: 0
+  max_idle_instances: 1
+  min_pending_latency: 30ms
+  max_pending_latency: automatic
+  max_concurrent_requests: 50
+
+# Environment variables
+env_variables:
+  DJANGO_DEBUG: "False"
+  DJANGO_ALLOWED_HOSTS: "*"
+  DJANGO_LOG_LEVEL: "INFO"
+  # Set these via app.yaml or gcloud command:
+  # DJANGO_SECRET_KEY: "your-secret-key"
+  # DATABASE_URL: "postgres://user:pass@/dbname?host=/cloudsql/CONNECTION_NAME"
+
+# Beta settings for Cloud SQL
+beta_settings:
+  cloud_sql_instances: "${PROJECT_ID}:us-central1:letsgetcrypto-db-instance"
+
+# Handlers for static files (optional)
+handlers:
+  # Static files
+  - url: /static
+    static_dir: staticfiles
+    secure: always
+  
+  # All other URLs go to the app
+  - url: /.*
+    script: auto
+    secure: always
+
+# VPC configuration (optional, for private Cloud SQL)
+vpc_access_connector:
+  name: "projects/${PROJECT_ID}/locations/us-central1/connectors/letsgetcrypto-connector"
+
+# Health checks
+readiness_check:
+  path: "/api/health/"
+  check_interval_sec: 10
+  timeout_sec: 4
+  failure_threshold: 2
+  success_threshold: 1
+
+liveness_check:
+  path: "/api/health/"
+  check_interval_sec: 30
+  timeout_sec: 4
+  failure_threshold: 2
+  success_threshold: 1

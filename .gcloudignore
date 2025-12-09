@@ -1,0 +1,77 @@
+# .gcloudignore - Files to ignore when deploying to Google Cloud
+# Similar to .gitignore but for gcloud deployments
+
+# Python cache
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+
+# Virtual environments
+venv/
+env/
+ENV/
+.venv
+
+# Testing and development
+.pytest_cache/
+.tox/
+.coverage
+.coverage.*
+htmlcov/
+*.log
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Git
+.git
+.gitignore
+.github/
+
+# Documentation
+*.md
+docs/
+
+# AWS specific files
+aws/
+buildspec.yml
+deploy-aws.sh
+package-for-aws.sh
+
+# Test files
+test_*.py
+*_test.py
+
+# Local development
+.env
+.env.local
+.env.*.local
+*.sqlite3
+*.db
+
+# Build artifacts
+dist/
+build/
+*.egg-info/
+model_weights/
+
+# Static files (will be collected during build)
+# staticfiles/
+
+# Node modules if any
+node_modules/
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Temporary files
+*.tmp
+*.temp
+/tmp/
