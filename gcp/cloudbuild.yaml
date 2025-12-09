@@ -86,11 +86,11 @@ options:
 # Substitution variables (set these in Cloud Build trigger or command line)
 substitutions:
   _REGION: 'us-central1'
-  _CLOUDSQL_CONNECTION_NAME: 'your-project:us-central1:letsgetcrypto-db-instance'
+  _CLOUDSQL_CONNECTION_NAME: '${PROJECT_ID}:us-central1:letsgetcrypto-db-instance'
   _VPC_CONNECTOR: 'letsgetcrypto-connector'
   _MIN_INSTANCES: '0'
   _MAX_INSTANCES: '10'
-  # _DATABASE_URL: 'postgres://user:pass@/dbname?host=/cloudsql/CONNECTION_NAME'
+  # _DATABASE_URL: 'postgres://user@/dbname?host=/cloudsql/${PROJECT_ID}:us-central1:letsgetcrypto-db-instance'
 
 # Timeout for the entire build
 timeout: '1200s'

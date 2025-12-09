@@ -32,7 +32,7 @@ env_variables:
 
 # Beta settings for Cloud SQL
 beta_settings:
-  cloud_sql_instances: "YOUR_PROJECT_ID:us-central1:letsgetcrypto-db-instance"
+  cloud_sql_instances: "${PROJECT_ID}:us-central1:letsgetcrypto-db-instance"
 
 # Handlers for static files (optional)
 handlers:
@@ -48,7 +48,7 @@ handlers:
 
 # VPC configuration (optional, for private Cloud SQL)
 vpc_access_connector:
-  name: "projects/YOUR_PROJECT_ID/locations/us-central1/connectors/letsgetcrypto-connector"
+  name: "projects/${PROJECT_ID}/locations/us-central1/connectors/letsgetcrypto-connector"
 
 # Health checks
 readiness_check:

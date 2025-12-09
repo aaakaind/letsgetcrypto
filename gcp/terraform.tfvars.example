@@ -12,7 +12,8 @@ db_password = "CHANGE_ME_TO_SECURE_PASSWORD"
 # Django configuration
 django_secret_key = "CHANGE_ME_TO_SECURE_RANDOM_STRING"
 
-# Container image (update after building and pushing to GCR/Artifact Registry)
+# Container image (will be set automatically by deploy script)
+# Format: gcr.io/PROJECT_ID/letsgetcrypto:latest
 container_image = "gcr.io/your-gcp-project-id/letsgetcrypto:latest"
 
 # Auto-scaling configuration

@@ -48,9 +48,9 @@ variable "django_secret_key" {
 }
 
 variable "container_image" {
-  description = "Container image URL"
+  description = "Container image URL (format: gcr.io/PROJECT_ID/letsgetcrypto:latest)"
   type        = string
-  default     = "gcr.io/PROJECT_ID/letsgetcrypto:latest"
+  default     = ""  # Will be set from project_id if not provided
 }
 
 variable "min_instances" {
@@ -69,6 +69,11 @@ variable "max_instances" {
 provider "google" {
   project = var.project_id
   region  = var.region
+}
+
+# Local values
+locals {
+  container_image = var.container_image != "" ? var.container_image : "gcr.io/${var.project_id}/${var.app_name}:latest"
 }
 
 # Enable required APIs
@@ -217,7 +222,7 @@ resource "google_cloud_run_service" "app" {
   template {
     spec {
       containers {
-        image = var.container_image
+        image = local.container_image
 
         env {
           name  = "DJANGO_DEBUG"
@@ -241,7 +246,18 @@ resource "google_cloud_run_service" "app" {
 
         env {
           name  = "DATABASE_URL"
-          value = "postgres://postgres:${var.db_password}@/${var.app_name}?host=/cloudsql/${google_sql_database_instance.postgres.connection_name}"
+          # Use Cloud SQL Unix socket connection without exposing password in environment
+          value = "postgres://postgres@/${var.app_name}?host=/cloudsql/${google_sql_database_instance.postgres.connection_name}"
+        }
+
+        env {
+          name = "DB_PASSWORD"
+          value_from {
+            secret_key_ref {
+              name = google_secret_manager_secret.db_password.secret_id
+              key  = "latest"
+            }
+          }
         }
 
         env {

@@ -81,8 +81,9 @@ docker push gcr.io/$GCP_PROJECT_ID/$APP_NAME:latest
 
 # Generate secure passwords if not set
 if [ -z "$DB_PASSWORD" ]; then
-    DB_PASSWORD=$(openssl rand -base64 32 | tr -d "=+/" | cut -c1-25)
-    echo -e "${YELLOW}📝 Generated database password${NC}"
+    # Generate a strong 32-character password for production security
+    DB_PASSWORD=$(openssl rand -base64 32 | tr -d "=+/" | cut -c1-32)
+    echo -e "${YELLOW}📝 Generated secure database password (32 characters)${NC}"
 fi
 
 if [ -z "$DJANGO_SECRET_KEY" ]; then
