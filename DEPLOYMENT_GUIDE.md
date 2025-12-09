@@ -29,6 +29,8 @@ Last Updated: October 2025
 | **Docker Compose** | 5 min | Easy | $0 (local) | Development, testing |
 | **AWS Elastic Beanstalk** | 10 min | Easy | $30-50 | Small production apps |
 | **AWS ECS Fargate** | 15 min | Medium | $50-100 | Production apps |
+| **GCP Cloud Run** | 10 min | Easy | $20-40 | Serverless production |
+| **GCP App Engine** | 10 min | Easy | $25-50 | Simple production |
 | **GitHub Pages** | 5 min | Easy | $0 | Static dashboard only |
 
 ### Fastest Path to Production
@@ -194,7 +196,46 @@ See [AWS_DEPLOYMENT.md](AWS_DEPLOYMENT.md) for detailed manual steps.
 
 ---
 
-### Option 4: GitHub Pages (Static Dashboard)
+### Option 4: Google Cloud Run (Serverless Production)
+
+**Best for:** Serverless production, automatic scaling, pay-per-use
+
+#### Prerequisites
+- Google Cloud account with billing enabled
+- gcloud CLI configured
+- Docker installed
+
+#### Automated Deployment
+
+```bash
+# Navigate to GCP directory
+cd gcp
+
+# Set your project
+export GCP_PROJECT_ID="your-project-id"
+
+# Run deployment script
+chmod +x deploy-gcp.sh
+./deploy-gcp.sh
+```
+
+The script will:
+- ✅ Enable required GCP APIs
+- ✅ Build and push Docker image to GCR
+- ✅ Deploy Cloud Run service
+- ✅ Create Cloud SQL database
+- ✅ Set up VPC networking
+- ✅ Configure secrets in Secret Manager
+
+**Deployment time:** 10-15 minutes
+
+See [GCP_DEPLOYMENT.md](GCP_DEPLOYMENT.md) for detailed instructions.
+
+**Cost:** ~$20-40/month
+
+---
+
+### Option 5: GitHub Pages (Static Dashboard)
 
 **Best for:** Static demo, documentation, marketing
 
@@ -586,7 +627,8 @@ aws ecr batch-delete-image \
 
 - **[RELEASE_CHECKLIST.md](RELEASE_CHECKLIST.md)** - Complete pre-deployment checklist
 - **[AWS_DEPLOYMENT.md](AWS_DEPLOYMENT.md)** - Detailed AWS deployment guide
-- **[CICD_GUIDE.md](CICD_GUIDE.md)** - CI/CD pipeline setup
+- **[GCP_DEPLOYMENT.md](GCP_DEPLOYMENT.md)** - Detailed Google Cloud deployment guide
+- **[CICD_GUIDE.md](CICD_GUIDE.md)** - CI/CD pipeline setup for AWS
 - **[README.md](README.md)** - Project overview and features
 - **[TESTING.md](TESTING.md)** - Testing documentation
 

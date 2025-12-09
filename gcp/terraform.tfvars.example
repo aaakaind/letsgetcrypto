@@ -1,0 +1,20 @@
+# Example variables for GCP deployment
+# Copy this file to terraform.tfvars and update with your values
+
+project_id = "your-gcp-project-id"
+region     = "us-central1"
+app_name   = "letsgetcrypto"
+
+# Database configuration
+db_tier     = "db-f1-micro"  # Free tier: db-f1-micro, Production: db-n1-standard-1
+db_password = "CHANGE_ME_TO_SECURE_PASSWORD"
+
+# Django configuration
+django_secret_key = "CHANGE_ME_TO_SECURE_RANDOM_STRING"
+
+# Container image (update after building and pushing to GCR/Artifact Registry)
+container_image = "gcr.io/your-gcp-project-id/letsgetcrypto:latest"
+
+# Auto-scaling configuration
+min_instances = 0  # Set to 1 or higher to avoid cold starts
+max_instances = 10
